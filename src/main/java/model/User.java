@@ -2,12 +2,12 @@ package model;
 
 public class User {
 
-    private int customerId;   // new
+    private int customerId;  
     private String name;
     private String email;
     private String address;
     private String password;
-    private String role;      // new
+    private String role;     
 
     // =================== customerId ===================
     public int getCustomerId() {
