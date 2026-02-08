@@ -1,6 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.ArrayList"%>
-<%@ page import="model.BookingCartItem"%>
+<%@ page import="model.Booking"%>
 <%@ page import="java.sql.*"%>
 <%@ page import="com.stripe.Stripe"%>
 <%@ page import="com.stripe.model.checkout.Session"%>
@@ -18,8 +18,8 @@
 
 <%
 Integer customerId = (Integer) session.getAttribute("sessCustomerId");
-ArrayList<BookingCartItem> cart =
-        (ArrayList<BookingCartItem>) session.getAttribute("cart");
+ArrayList<Booking> cart =
+        (ArrayList<Booking>) session.getAttribute("cart");
 
 if (customerId == null || cart == null || cart.isEmpty()) {
     out.println("<h2>Invalid session.</h2>");
@@ -59,16 +59,16 @@ try {
 
     PreparedStatement ps = conn.prepareStatement(insertSQL);
 
-    for (BookingCartItem item : cart) {
-        ps.setInt(1, item.getServiceId());
-        ps.setInt(2, item.getPackageId());
+    for (Booking item : cart) {
+    	ps.setInt(1, item.getService().getServiceId());
+        ps.setInt(2, item.getServicePackage().getPackageId());
         ps.setInt(3, customerId);
         ps.setString(4, stripeSession.getCustomerEmail());
         ps.setDate(5, java.sql.Date.valueOf(item.getStartDate()));
         ps.setDate(6, java.sql.Date.valueOf(item.getEndDate()));
         ps.setDouble(7, item.getPricePerDay());
         ps.setString(8, item.getNotes());
-        ps.setString(9, item.getAddress());
+        ps.setString(9, item.getServiceAddress());
         ps.addBatch();
     }
 
@@ -85,7 +85,7 @@ try {
 <p><strong>Email:</strong> <%= stripeSession.getCustomerEmail() %></p>
 <p><strong>Amount Paid:</strong> $<%= stripeSession.getAmountTotal() / 100.0 %></p>
 
-<a href="index.jsp">Return Home</a>
+<a href="homepage.jsp">Return Home</a>
 
 <%
 } catch (Exception e) {

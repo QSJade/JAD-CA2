@@ -122,7 +122,7 @@ body {
 
 <body>
 
-<%@ include file="header.jsp" %>
+<jsp:include page="<%= request.getContextPath() %>/header.jsp" />
 
 <div class="sidebar">
     <h3>Menu</h3>

@@ -88,7 +88,7 @@
 </head>
 <body>
 
-<%@ include file="header.jsp" %>
+<jsp:include page="<%= request.getContextPath() %>/header.jsp" />
 
 <div class="main-content">
     <div class="form-container">
@@ -159,6 +159,6 @@
     </div>
 </div>
 
-<%@ include file="footer.jsp" %>
+<jsp:include page="<%= request.getContextPath() %>/footer.jsp" />
 </body>
 </html>

@@ -1,6 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.ArrayList"%>
-<%@ page import="model.BookingCartItem"%>
+<%@ page import="model.Booking"%>
 <%@ page import="java.time.*"%>
 <%@ page import="java.time.temporal.ChronoUnit"%>
 <!DOCTYPE html>
@@ -14,7 +14,7 @@
 <%@ include file="../header.jsp" %>
 
 <%
-ArrayList<BookingCartItem> cart = (ArrayList<BookingCartItem>) session.getAttribute("cart");
+ArrayList<Booking> cart = (ArrayList<Booking>) session.getAttribute("cart");
 Integer customerId = (Integer) session.getAttribute("sessCustomerId");
 String customerEmail = (String) session.getAttribute("sessCustomerEmail");
 String customerAddress = (String) session.getAttribute("sessCustomerAddress");
@@ -47,7 +47,7 @@ double grandTotal = 0;
 </tr>
 
 <%
-for (BookingCartItem item : cart) {
+for (Booking item : cart) {
     LocalDate start = item.getStartDate();
     LocalDate end = item.getEndDate();
     long days = ChronoUnit.DAYS.between(start, end) + 1;
@@ -55,8 +55,8 @@ for (BookingCartItem item : cart) {
     grandTotal += total;
 %>
 <tr>
-<td><%= item.getServiceName() %></td>
-<td><%= item.getPackageName() %></td>
+<td><%= item.getService().getServiceName() %></td>
+<td><%= item.getServicePackage().getPackageName()%></td>
 <td><%= item.getStartDate() %></td>
 <td><%= item.getEndDate() %></td>
 <td><%= days %></td>
