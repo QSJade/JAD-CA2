@@ -1,5 +1,5 @@
 package model;
-
+// this is here instead of reusing booking.java is because this is temporary (session)
 import java.io.Serializable;
 
 public class BookingCartItem implements Serializable {

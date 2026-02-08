@@ -29,7 +29,8 @@ if (customerId == null || cart == null || cart.isEmpty()) {
 /* =========================
    VERIFY STRIPE PAYMENT
    ========================= */
-Stripe.apiKey = "sk_test_51SsDLV7JAQOUwt4TdFMUtyqSFTwptdDhy5pKz3LL2divfM6pKy34Dv3y2TChhuGGRPJXY7OBgNRd2yivn0AJ8lIn00ATlchTTh";
+ Stripe.apiKey = System.getenv("STRIPE_SECRET_KEY");
+
 
 String sessionId = request.getParameter("session_id");
 if (sessionId == null) {
