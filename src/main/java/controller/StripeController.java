@@ -2,31 +2,56 @@ package controller;
 
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
+
+import jakarta.servlet.http.HttpSession;
 import model.Booking;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import service.PaymentService;
 
 import java.util.List;
-
-@RestController
-@RequestMapping("/api/stripe")
+@Controller
+@RequestMapping("/stripe")
 public class StripeController {
 
     @Autowired
     private PaymentService paymentService;
 
-    // ===== Create Stripe Checkout Session =====
     @PostMapping("/checkout")
-    public Session checkout(
-            @RequestBody List<Booking> bookings,
-            @RequestParam String successUrl,
-            @RequestParam String cancelUrl
+    public String checkout(
+            HttpSession session
     ) throws StripeException {
 
-        // Customer email can be obtained from the first booking (all bookings belong to the same customer)
-        String customerEmail = bookings.isEmpty() ? "" : bookings.get(0).getCustomerEmail();
+        List<Booking> cart =
+            (List<Booking>) session.getAttribute("cart");
 
-        return paymentService.createCheckoutSession(bookings, successUrl, cancelUrl);
+        if (cart == null || cart.isEmpty()) {
+            return "redirect:/cart";
+        }
+
+        Session stripeSession =
+            paymentService.createCheckoutSession(
+                cart,
+                "http://localhost:8080/stripe/success",
+                "http://localhost:8080/stripe/cancel"
+            );
+
+        return "redirect:" + stripeSession.getUrl();
     }
+
+    @GetMapping("/success")
+    public String success(
+            @RequestParam("session_id") String sessionId,
+            HttpSession session,
+            Model model
+    ) throws Exception {
+
+        paymentService.verifyAndSave(sessionId, session);  // call service
+
+        model.addAttribute("sessionId", sessionId);
+        return "paymentSuccess"; // paymentSuccess.jsp will show confirmation
+    }
+
 }
