@@ -1,114 +1,32 @@
-/*
- * -------------------------------------------------------
- * Author(s): Jade
- * Date: 19/1/2025
- * Description:
- * REST Controller for managing customer-related operations
- * such as retrieve, create, update, and delete users.
- * -------------------------------------------------------
- */
 package controller;
 
 import model.User;
-import model.ProfileDAO;
-
+import service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
 
-    // ================= GET USER BY ID =================
-    @GetMapping("/{customerId}")
-    public User getUser(@PathVariable int customerId) {
+    @Autowired
+    private UserService userService;
 
-        User user = null;
-
-        try {
-            ProfileDAO db = new ProfileDAO();
-            user = db.getUserDetails(customerId);
-        } catch (Exception e) {
-            System.out.println("Error in getUser(): " + e);
-        }
-
-        return user;
-    }
-
-    // ================= GET ALL USERS =================
     @GetMapping
-    public List<User> getAllUsers() {
+    public List<User> getAllUsers() { return userService.getAllUsers(); }
 
-        List<User> userList = new ArrayList<>();
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable Integer id) { return userService.getUserById(id); }
 
-        try {
-            ProfileDAO db = new ProfileDAO();
-            userList = db.getAllUsers();
+    @PostMapping
+    public User createUser(@RequestBody User user) { return userService.createUser(user); }
 
-            System.out.println("Retrieved " + userList.size() + " users");
-
-        } catch (Exception e) {
-            System.err.println("Error in getAllUsers(): " + e);
-            e.printStackTrace();
-        }
-
-        return userList;
+    @PutMapping("/{id}")
+    public User updateUser(@PathVariable Integer id, @RequestBody User updated) {
+        return userService.updateUser(id, updated);
     }
 
-    // ================= CREATE USER =================
-    @PostMapping(consumes = "application/json")
-    public int createUser(@RequestBody User user) {
-
-        int rec = 0;
-
-        try {
-            ProfileDAO db = new ProfileDAO();
-            rec = db.insertUser(user);
-            System.out.println("User created, rows affected: " + rec);
-
-        } catch (Exception e) {
-            System.out.println("Error in createUser(): " + e);
-        }
-
-        return rec;
-    }
-
-    // ================= UPDATE USER =================
-    @PutMapping(value = "/{customerId}", consumes = "application/json")
-    public int updateUser(@PathVariable int customerId,
-                          @RequestBody User user) {
-
-        int rec = 0;
-
-        try {
-            ProfileDAO db = new ProfileDAO();
-            rec = db.updateUser(customerId, user);
-            System.out.println("User updated, rows affected: " + rec);
-
-        } catch (Exception e) {
-            System.out.println("Error in updateUser(): " + e);
-        }
-
-        return rec;
-    }
-
-    // ================= DELETE USER =================
-    @DeleteMapping("/{customerId}")
-    public int deleteUser(@PathVariable int customerId) {
-
-        int rec = 0;
-
-        try {
-            ProfileDAO db = new ProfileDAO();
-            rec = db.deleteUser(customerId);
-            System.out.println("User deleted, rows affected: " + rec);
-
-        } catch (Exception e) {
-            System.out.println("Error in deleteUser(): " + e);
-        }
-
-        return rec;
-    }
+    @DeleteMapping("/{id}")
+    public boolean deleteUser(@PathVariable Integer id) { return userService.deleteUser(id); }
 }

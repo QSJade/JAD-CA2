@@ -48,8 +48,8 @@ double grandTotal = 0;
 
 <%
 for (BookingCartItem item : cart) {
-    LocalDate start = LocalDate.parse(item.getStartDate());
-    LocalDate end = LocalDate.parse(item.getEndDate());
+    LocalDate start = item.getStartDate();
+    LocalDate end = item.getEndDate();
     long days = ChronoUnit.DAYS.between(start, end) + 1;
     double total = item.getPricePerDay() * days;
     grandTotal += total;
@@ -70,13 +70,19 @@ for (BookingCartItem item : cart) {
 </tr>
 </table>
 
-<form action="bookingSubmission.jsp" method="post">
-    <input type="submit" value="Confirm & Pay All Bookings" class="btn-pay">
-</form>
+<button id="payBtn">Pay Now</button>
 
-<%
-    session.removeAttribute("cart");
-%>
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+const stripe = Stripe("pk_test_51SsDLV7JAQOUwt4TDGl0QVyxrTkZgF1BU7kxqf8VXrz2OQh03mQ2igl4l4cLa7jJXeoL0VcdPnfEBaD1BXzyrGvQ001gVHC5iT");
+
+document.getElementById("payBtn").onclick = async () => {
+  const res = await fetch("/stripe/checkout", { method: "POST" });
+  const data = await res.json();
+  stripe.redirectToCheckout({ sessionId: data.id });
+};
+</script>
+
 
 <%@ include file="../footer.jsp" %>
 </body>
