@@ -37,7 +37,7 @@ public class Booking {
     private String notes;
 
     @Column(nullable = false)
-    private String status = "pending"; // pending, confirmed, completed, cancelled
+    private String status = "pending";
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -54,11 +54,15 @@ public class Booking {
 
     private String stripeSessionId;
 
-    private double subtotal;
-
-    private double gst;
-
-    private double totalAmount;
+    // CHANGE THESE FROM double TO Double (allow null)
+    private Double subtotal;
+    
+    private Double gst;
+    
+    private Double totalAmount;
+    
+    @Transient
+    private boolean feedbackExists;
 
     // ===== Getters and Setters =====
     public Integer getBookingId() { return bookingId; }
@@ -103,12 +107,15 @@ public class Booking {
     public String getStripeSessionId() { return stripeSessionId; }
     public void setStripeSessionId(String stripeSessionId) { this.stripeSessionId = stripeSessionId; }
 
-    public double getSubtotal() { return subtotal; }
-    public void setSubtotal(double subtotal) { this.subtotal = subtotal; }
+    public Double getSubtotal() { return subtotal; }
+    public void setSubtotal(Double subtotal) { this.subtotal = subtotal; }
 
-    public double getGst() { return gst; }
-    public void setGst(double gst) { this.gst = gst; }
+    public Double getGst() { return gst; }
+    public void setGst(Double gst) { this.gst = gst; }
 
-    public double getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
+    public Double getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }
+    
+    public boolean isFeedbackExists() { return feedbackExists; }
+    public void setFeedbackExists(boolean feedbackExists) { this.feedbackExists = feedbackExists; }
 }

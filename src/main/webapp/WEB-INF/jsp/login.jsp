@@ -12,7 +12,7 @@
   -->
 <head>
 <meta charset="UTF-8">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 <title>Login</title>
 </head>
 <body>
@@ -28,11 +28,15 @@
 %>
     <p style='color: red;'>Please log in first to access this</p>
 <% 
+    } else if (errCode != null && errCode.equals("unauthorized")) { 
+%>
+    <p style='color: red;'>You are not authorized to access that page</p>
+<% 
     } 
 %>
 
 <div class="form-wrapper">
-<form action="<%=request.getContextPath()%>/verifyUser" method = "post" class="profile-form">
+<form action="${pageContext.request.contextPath}/verifyUser" method="post" class="profile-form">
   <div class="form-row">
     <label for="email">Email:</label>
     <input type="email" name="email" required>
@@ -43,7 +47,7 @@
     <input type="password" name="password" required>
   </div>
 
-  <button type="button" onclick="window.location.href='register.jsp'">
+  <button type="button" onclick="window.location.href='${pageContext.request.contextPath}/register'">
     Don't have an account yet?
   </button>
 

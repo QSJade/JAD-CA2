@@ -24,6 +24,14 @@ public class UserProfile {
     private String medicationRestrictions;
     private String otherInfo;
     private LocalDateTime createdAt;
+    
+    // ===== NEW FIELDS FOR PART 2 =====
+    private String emergencyContactName;
+    private String emergencyContactPhone;
+    private String emergencyContactRelation;
+    private String bloodType;
+    private String allergies;
+    private String chronicConditions;
 
     // ===== Getters & Setters =====
     public Integer getProfileId() { return profileId; }
@@ -31,6 +39,16 @@ public class UserProfile {
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+    
+    public Integer getCustomerId() { 
+        return user != null ? user.getCustomerId() : null; 
+    }
+    public void setCustomerId(Integer customerId) {
+        if (user == null) {
+            user = new User();
+        }
+        user.setCustomerId(customerId);
+    }
 
     public Boolean getHasPets() { return hasPets; }
     public void setHasPets(Boolean hasPets) { this.hasPets = hasPets; }
@@ -55,4 +73,23 @@ public class UserProfile {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    
+    // =====  GETTERS/SETTERS =====
+    public String getEmergencyContactName() { return emergencyContactName; }
+    public void setEmergencyContactName(String emergencyContactName) { this.emergencyContactName = emergencyContactName; }
+    
+    public String getEmergencyContactPhone() { return emergencyContactPhone; }
+    public void setEmergencyContactPhone(String emergencyContactPhone) { this.emergencyContactPhone = emergencyContactPhone; }
+    
+    public String getEmergencyContactRelation() { return emergencyContactRelation; }
+    public void setEmergencyContactRelation(String emergencyContactRelation) { this.emergencyContactRelation = emergencyContactRelation; }
+    
+    public String getBloodType() { return bloodType; }
+    public void setBloodType(String bloodType) { this.bloodType = bloodType; }
+    
+    public String getAllergies() { return allergies; }
+    public void setAllergies(String allergies) { this.allergies = allergies; }
+    
+    public String getChronicConditions() { return chronicConditions; }
+    public void setChronicConditions(String chronicConditions) { this.chronicConditions = chronicConditions; }
 }

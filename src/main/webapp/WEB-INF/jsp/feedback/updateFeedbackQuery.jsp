@@ -8,13 +8,13 @@ String serviceIdStr = request.getParameter("serviceId");
 // Check login
 Integer customerId = (Integer) session.getAttribute("sessCustomerId");
 if (customerId == null) {
-    response.sendRedirect("../../login.jsp?errCode=notLoggedIn");
+    response.sendRedirect(request.getContextPath() + "/login?errCode=notLoggedIn");
     return;
 }
 
 // Validate feedback ID
 if (feedbackIdStr == null || feedbackIdStr.isEmpty()) {
-    response.sendRedirect("../updateFeedback.jsp?errCode=missingId");
+    response.sendRedirect(request.getContextPath() + "/feedback/update?feedbackId=" + feedbackIdStr + "&serviceId=" + serviceIdStr + "&errCode=missingId");
     return;
 }
 int feedbackId = Integer.parseInt(feedbackIdStr);
@@ -25,19 +25,19 @@ int rating = 0;
 try {
     rating = Integer.parseInt(ratingStr);
 } catch (Exception ex) {
-    response.sendRedirect("../updateFeedback.jsp?feedbackId=" + feedbackId + "&serviceId=" + serviceIdStr + "&errCode=ratingFail");
+    response.sendRedirect(request.getContextPath() + "/feedback/update?feedbackId=" + feedbackId + "&serviceId=" + serviceIdStr + "&errCode=ratingFail");
     return;
 }
 
 if (rating < 1 || rating > 5) {
-    response.sendRedirect("../updateFeedback.jsp?feedbackId=" + feedbackId + "&serviceId=" + serviceIdStr + "&errCode=ratingFail");
+    response.sendRedirect(request.getContextPath() + "/feedback/update?feedbackId=" + feedbackId + "&serviceId=" + serviceIdStr + "&errCode=ratingFail");
     return;
 }
 
 // Validate comments
 String comments = request.getParameter("comments");
 if (comments == null || comments.trim().isEmpty()) {
-    response.sendRedirect("../updateFeedback.jsp?feedbackId=" + feedbackId + "&serviceId=" + serviceIdStr + "&errCode=commentEmpty");
+    response.sendRedirect(request.getContextPath() + "/feedback/update?feedbackId=" + feedbackId + "&serviceId=" + serviceIdStr + "&errCode=commentEmpty");
     return;
 }
 
@@ -55,17 +55,17 @@ try {
 
     try {
         ps.execute();
+        conn.close();
 %>
         <script>
             alert('Feedback updated successfully!');
-            window.location.href = '../../serviceDetails.jsp?serviceId=<%= serviceIdStr %>';
+            window.location.href = '<%= request.getContextPath() %>/serviceDetails?serviceId=<%= serviceIdStr %>';
         </script>
 <%
     } catch (SQLException procErr) {
-        response.sendRedirect("../updateFeedback.jsp?feedbackId=" + feedbackId + "&serviceId=" + serviceIdStr + "&errCode=updateFail");
+        conn.close();
+        response.sendRedirect(request.getContextPath() + "/feedback/update?feedbackId=" + feedbackId + "&serviceId=" + serviceIdStr + "&errCode=updateFail");
     }
-
-    conn.close();
 } catch (Exception e) {
     out.println("Error: " + e);
 }

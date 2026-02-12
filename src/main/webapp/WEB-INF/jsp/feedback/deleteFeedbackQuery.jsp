@@ -9,13 +9,13 @@ Integer customerId = (Integer) session.getAttribute("sessCustomerId");
 
 // Validate login
 if (customerId == null) {
-    response.sendRedirect("../../login.jsp?errCode=notLoggedIn");
+    response.sendRedirect(request.getContextPath() + "/login?errCode=notLoggedIn");
     return;
 }
 
 // Validate feedbackId
 if (feedbackIdStr == null || feedbackIdStr.isEmpty()) {
-    response.sendRedirect("../../profile/profile.jsp?errCode=deleteFail");
+    response.sendRedirect(request.getContextPath() + "/profile?errCode=deleteFail");
     return;
 }
 
@@ -33,20 +33,18 @@ try {
 
     try {
         ps.execute();
+        conn.close();
 %>
         <script>
             alert('Feedback deleted successfully!');
-            // Redirect back to same service page
-            window.location.href = '../../serviceDetails.jsp?serviceId=<%= serviceIdStr %>';
+            window.location.href = '<%= request.getContextPath() %>/serviceDetails?serviceId=<%= serviceIdStr %>';
         </script>
 <%
     } catch(SQLException procErr) {
-        response.sendRedirect("../../profile/profile.jsp?errCode=deleteFail");
+        conn.close();
+        response.sendRedirect(request.getContextPath() + "/profile?errCode=deleteFail");
     }
-
-    conn.close();
-} catch(SQLException procErr) {
-    out.println("SQL error: " + procErr.getMessage());
+} catch(Exception e) {
+    out.println("SQL error: " + e.getMessage());
 }
-
 %>

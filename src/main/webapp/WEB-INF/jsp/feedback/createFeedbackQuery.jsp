@@ -17,7 +17,7 @@ if (customerIdStr == null || serviceIdStr == null || bookingIdStr == null ||
     customerIdStr.isEmpty() || serviceIdStr.isEmpty() || bookingIdStr.isEmpty() ||
     ratingStr.isEmpty() || comments.isEmpty()) {
 
-    response.sendRedirect("../feedback.jsp?errCode=missingValues");
+    response.sendRedirect(request.getContextPath() + "/feedback?bookingId=" + bookingIdStr + "&serviceId=" + serviceIdStr + "&errCode=missingValues");
     return;
 }
 
@@ -33,13 +33,13 @@ try {
     bookingId  = Integer.parseInt(bookingIdStr);
     rating     = Integer.parseInt(ratingStr);
 } catch (Exception e) {
-    response.sendRedirect("../feedback.jsp?errCode=invalidNumber");
+    response.sendRedirect(request.getContextPath() + "/feedback?bookingId=" + bookingIdStr + "&serviceId=" + serviceIdStr + "&errCode=invalidNumber");
     return;
 }
 
 // ===== VALIDATION: rating must be 1–5 =====
 if (rating < 1 || rating > 5) {
-    response.sendRedirect("../feedback.jsp?errCode=ratingFail");
+    response.sendRedirect(request.getContextPath() + "/feedback?bookingId=" + bookingIdStr + "&serviceId=" + serviceIdStr + "&errCode=ratingFail");
     return;
 }
 
@@ -56,13 +56,14 @@ try {
 
     if (rsCheck.next()) {
         conn.close();
-        response.sendRedirect("../feedback.jsp?errCode=alreadySubmitted");
+        response.sendRedirect(request.getContextPath() + "/feedback?bookingId=" + bookingIdStr + "&serviceId=" + serviceIdStr + "&errCode=alreadySubmitted");
         return;
     }
+    rsCheck.close();
+    psCheck.close();
 
     // ===== Insert feedback =====
-    String sqlInsert = 
-        "INSERT INTO feedbacks (customer_id, service_id, booking_id, rating, comments) " + "VALUES (?, ?, ?, ?, ?)";
+    String sqlInsert = "INSERT INTO feedbacks (customer_id, service_id, booking_id, rating, comments) VALUES (?, ?, ?, ?, ?)";
     PreparedStatement psInsert = conn.prepareStatement(sqlInsert);
     psInsert.setInt(1, customerId);
     psInsert.setInt(2, serviceId);
@@ -71,18 +72,18 @@ try {
     psInsert.setString(5, comments);
 
     int rows = psInsert.executeUpdate();
+    psInsert.close();
     conn.close();
 
     if (rows > 0) {
 %>
         <script>
             alert('Feedback created successfully!');
-            // Redirect back to same service page
-            window.location.href = '../../serviceDetails.jsp?serviceId=<%= serviceIdStr %>';
+            window.location.href = '<%= request.getContextPath() %>/serviceDetails?serviceId=<%= serviceIdStr %>';
         </script>
 <%
     } else {
-        response.sendRedirect("../feedback.jsp?errCode=insertFail");
+        response.sendRedirect(request.getContextPath() + "/feedback?bookingId=" + bookingIdStr + "&serviceId=" + serviceIdStr + "&errCode=insertFail");
     }
 
 } catch (Exception e) {

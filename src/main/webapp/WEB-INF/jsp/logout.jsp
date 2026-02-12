@@ -19,7 +19,7 @@
 <script>
     alert("You have been logged out successfully!");
     // Redirect to login page after logout
-    window.location.href = "homepage.jsp";
+    window.location.href = "homepage";
 </script>
 
 <%@ include file="footer.jsp" %>

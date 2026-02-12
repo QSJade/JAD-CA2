@@ -7,12 +7,10 @@
 <head>
 <meta charset="UTF-8">
 <title>Services Offered</title>
-<link rel="stylesheet" href="${pageContext.request.contextPath}/assignment1/css/style.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 </head>
 <body>
 <%@ include file="header.jsp" %>
-
-
 
 <main class="services-container">
   <section class="intro">
@@ -38,26 +36,25 @@
             String serviceName = rs.getString("service_name");
             String description = rs.getString("description");
 
-            // Map image and page based on service name
-            String imgSrc = "images/default-service.jpg"; // default image in case
-            String pageLink = "#"; // default link
+            String imgSrc = "${pageContext.request.contextPath}/images/default-service.jpg";
+            String controllerPath = "#";
 
             if(serviceName.equalsIgnoreCase("In-Home Care")) {
                 imgSrc = "images/care.jpg";
-                pageLink = "serviceHome.jsp";
+                controllerPath = "serviceHome";
             } else if(serviceName.equalsIgnoreCase("Meal Support")) {
                 imgSrc = "images/meal-service.jpg";
-                pageLink = "serviceMeal.jsp";
+                controllerPath = "serviceMeal";
             } else if(serviceName.equalsIgnoreCase("Transportation Assistance")) {
                 imgSrc = "images/transportation.jpg";
-                pageLink = "serviceTransport.jsp";
+                controllerPath = "serviceTransport";
             }
 %>
     <div class="service-card">
         <img src="<%= imgSrc %>" alt="<%= serviceName %>">
         <h3><%= serviceName %></h3>
         <p><%= description %></p>
-        <a href="<%= pageLink %>?serviceId=<%= serviceId %>" class="btn-outline">View Details</a>
+        <a href="${pageContext.request.contextPath}/<%= controllerPath %>?serviceId=<%= serviceId %>" class="btn-outline">View Details</a>
     </div>
 <%
         }

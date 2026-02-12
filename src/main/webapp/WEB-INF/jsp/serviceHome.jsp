@@ -52,7 +52,7 @@ int bookPackageCounter = 1; // unique packageId for booking URL
             </div>
             <h3>Price/day: $200</h3>
         </div>
-        <a href="booking/createBooking.jsp?packageId=<%= bookPackageCounter++ %>&serviceId=<%= serviceId %>" class="book-btn">Book Now</a>
+        <a href="${pageContext.request.contextPath}/booking/createBooking?packageId=<%= bookPackageCounter++ %>&serviceId=<%= serviceId %>" class="book-btn">Book Now</a>
     </div>
 
     <!-- Silver Package -->
@@ -77,7 +77,7 @@ int bookPackageCounter = 1; // unique packageId for booking URL
             </div>
             <h3>Price/day: $150</h3>
         </div>
-        <a href="booking/createBooking.jsp?packageId=<%= bookPackageCounter++ %>&serviceId=<%= serviceId %>" class="book-btn">Book Now</a>
+        <a href="${pageContext.request.contextPath}/booking/createBooking?packageId=<%= bookPackageCounter++ %>&serviceId=<%= serviceId %>" class="book-btn">Book Now</a>
     </div>
 
     <!-- Bronze Package -->
@@ -102,7 +102,7 @@ int bookPackageCounter = 1; // unique packageId for booking URL
             </div>
             <h3>Price/day: $100</h3>
         </div>
-        <a href="booking/createBooking.jsp?packageId=<%= bookPackageCounter++ %>&serviceId=<%= serviceId %>" class="book-btn">Book Now</a>
+        <a href="${pageContext.request.contextPath}/booking/createBooking?packageId=<%= bookPackageCounter++ %>&serviceId=<%= serviceId %>" class="book-btn">Book Now</a>
     </div>
 
 </div>
@@ -146,9 +146,9 @@ int bookPackageCounter = 1; // unique packageId for booking URL
             if(loggedInCustomerId != null && feedbackCustomerId == loggedInCustomerId) {
      %>
 		<div class="feedback-buttons">
-		    <a href="feedback/updateFeedback.jsp?feedbackId=<%= feedbackId %>&serviceId=<%= serviceId %>" class="update-btn">Update</a>
-		    <a href="feedback/model/deleteFeedbackQuery.jsp?feedbackId=<%= feedbackId %>&serviceId=<%= serviceId %>" 
-		       class="delete-btn" onclick="return confirm('Are you sure you want to delete this feedback?');">Delete</a>
+			<a href="${pageContext.request.contextPath}/feedback/update?feedbackId=<%= feedbackId %>&serviceId=<%= serviceId %>" class="update-btn">Update</a>
+			<a href="${pageContext.request.contextPath}/feedback/delete?feedbackId=<%= feedbackId %>&serviceId=<%= serviceId %>" 
+			class="delete-btn" onclick="return confirm('Are you sure you want to delete this feedback?');">Delete</a>
 		</div>
 
      <%

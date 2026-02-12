@@ -6,7 +6,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Booking</title>
-<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 </head>
 <body>
 <%@ include file="../header.jsp" %>
@@ -52,7 +52,7 @@ try {
 
 // Check if logged in
 if(customerId == null) {
-    response.sendRedirect("../login.jsp?errCode=notLoggedIn");
+    response.sendRedirect(request.getContextPath() + "/login?errCode=notLoggedIn");
     return;
 }
 
@@ -65,52 +65,70 @@ if (errCode != null && errCode.equals("insertFail")) {
 
 <h1 class="booking-title">Booking Details</h1>
 
-<form action="cart/addToCart.jsp" method="post" class="form-wrapper" onsubmit="return validateDates();">
+<form action="${pageContext.request.contextPath}/cart/add" method="post" class="form-wrapper" onsubmit="return validateDates();">
     <input type="hidden" name="serviceId" value="<%= serviceId %>">
     <input type="hidden" name="packageId" value="<%= packageId %>">
+    <input type="hidden" name="serviceName" value="<%= serviceName %>">
+    <input type="hidden" name="packageName" value="<%= packageName %>">
 
-    <!-- Service and Package -->
-    <label for="service">Service:</label>
-    <input type="text" name="serviceName" value="<%= serviceName %>" readonly><br><br>
+    <!-- Service and Package (display only) -->
+    <div class="form-row">
+        <label>Service:</label>
+        <input type="text" value="<%= serviceName %>" readonly>
+    </div>
 
-    <label for="package">Package:</label>
-    <input type="text" name="packageName" value="<%= packageName %>" readonly><br><br>
+    <div class="form-row">
+        <label>Package:</label>
+        <input type="text" value="<%= packageName %>" readonly>
+    </div>
 
     <!-- Contact details -->
-    <label for="name">Name:</label>
-    <input type="text" name="name" value="<%= customerName %>" readonly><br><br>
+    <div class="form-row">
+        <label>Name:</label>
+        <input type="text" name="name" value="<%= customerName %>" readonly>
+    </div>
 
-    <label for="email">Email:</label>
-    <input type="email" name="email" value="<%= customerEmail %>" readonly><br><br>
+    <div class="form-row">
+        <label>Email:</label>
+        <input type="email" name="email" value="<%= customerEmail %>" readonly>
+    </div>
 
-	<!-- Address -->
-	<label for="service_address">Service Address:</label>
-	<input type="text" name="service_address" value="<%= customerAddress %>" required><br><br>
+    <!-- Address -->
+    <div class="form-row">
+        <label>Service Address:</label>
+        <input type="text" name="service_address" value="<%= customerAddress != null ? customerAddress : "" %>" required>
+    </div>
        
     <!-- Dates -->
-<%
-    // Get today's date
-    java.time.LocalDate today = java.time.LocalDate.now();
-    String todayStr = today.toString(); // get the date only
-%>
+    <%
+        java.time.LocalDate today = java.time.LocalDate.now();
+        String todayStr = today.toString();
+    %>
     
-	<label for="startDate">Start Date:</label>
-	<input type="date" name="startDate" required min="<%= todayStr %>"><br><br>
-	
-	<label for="endDate">End Date:</label>
-	<input type="date" name="endDate" required min="<%= todayStr %>"><br><br>
+    <div class="form-row">
+        <label>Start Date:</label>
+        <input type="date" name="startDate" required min="<%= todayStr %>">
+    </div>
+    
+    <div class="form-row">
+        <label>End Date:</label>
+        <input type="date" name="endDate" required min="<%= todayStr %>">
+    </div>
 
     <!-- Additional notes -->
-    <label for="notes">Notes:</label>
-    <input type="text" name="notes"><br><br>
+    <div class="form-row">
+        <label>Notes:</label>
+        <input type="text" name="notes">
+    </div>
 
-    <input type="submit" name="btnSubmit" value="Continue">
+    <div class="button-row">
+        <input type="submit" name="btnSubmit" value="Continue">
+    </div>
 </form>
 
 <%@ include file="../footer.jsp" %>
 
 <script>
-// Validate that end date is not earlier than start date
 function validateDates() {
     const startDate = document.querySelector("input[name='startDate']").value;
     const endDate = document.querySelector("input[name='endDate']").value;

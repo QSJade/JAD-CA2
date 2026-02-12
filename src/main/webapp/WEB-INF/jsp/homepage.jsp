@@ -147,7 +147,7 @@ double avgTransport = 0;
   </section>
 
   <div class="button-container">
-      <a href="serviceDetails.jsp" class="btn-outline">More Information</a>
+      <a href="serviceDetails" class="btn-outline">More Information</a>
   </div>
 
 </main>

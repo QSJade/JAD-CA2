@@ -3,30 +3,32 @@
 <%@ include file="../header.jsp" %>
 <head>
 <meta charset="UTF-8">
-<link rel="stylesheet" href="../css/style.css">
-<title>Profile</title>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+<title>My Profile</title>
 </head>
+<body>
+
 <%
 Integer customerId = (Integer) session.getAttribute("sessCustomerId");
 if (customerId == null) {
-    response.sendRedirect("../login.jsp?errCode=notLoggedIn");
+    response.sendRedirect(request.getContextPath() + "/login?errCode=notLoggedIn");
     return;
 }
 
-// Check error messages
+// Get error and success messages from request
 String errCode = request.getParameter("errCode");
-if ("updateFail".equals(errCode)) {
-    out.println("<p style='color: red;'>One of the values is incorrect. Please try again.</p>");
-} else if ("deleteFail".equals(errCode)) {
-    out.println("<p style='color: red;'>Something went wrong. Please try again.</p>");
-}
+String success = request.getParameter("success");
+%>
 
+<div class="profile-container">
+
+<%
 try {
     Class.forName("org.postgresql.Driver");
     String connURL = "jdbc:postgresql://ep-hidden-sound-a186ebzs-pooler.ap-southeast-1.aws.neon.tech/neondb?user=neondb_owner&password=npg_qlwo4uHmbj7F&sslmode=require&channelBinding=require";
     Connection conn = DriverManager.getConnection(connURL);
 
-    // --- Load user info ---
+    // ===== LOAD USER INFO =====
     String username = "", email = "", address = "";
     PreparedStatement psUser = conn.prepareStatement("SELECT name, email, address FROM customers WHERE customer_id=?");
     psUser.setInt(1, customerId);
@@ -34,50 +36,112 @@ try {
     if (rsUser.next()) {
         username = rsUser.getString("name");
         email = rsUser.getString("email");
-        address = rsUser.getString("address");
+        address = rsUser.getString("address") != null ? rsUser.getString("address") : "";
     }
     rsUser.close();
     psUser.close();
 %>
 
-<h1>My Profile</h1>
-<div class="form-wrapper">
-    <form action="model/updateProfile.jsp" method="post" class="profile-form">
-        <div class="form-row">
-            <label for="username">Username:</label>
-            <input type="text" name="username" id="username" value="<%= username %>">
-        </div>
-        <div class="form-row">
-            <label for="email">Email:</label>
-            <input type="email" name="email" id="email" value="<%= email %>" readonly>
-        </div>
-        <div class="form-row">
-            <label for="address">Address:</label>
-            <input type="text" name="address" id="address" value="<%= address %>">
-        </div>
-        <div class="form-row">
-            <label for="password">Password:</label>
-            <input type="password" name="password" id="password" placeholder="Edit to change">
-        </div>
-        <div class="button-row">
-            <input type="submit" value="Update Profile" class="btn-update">
-        </div>
-    </form>
+    <h1>My Profile</h1>
+    
+    <!-- ===== PROFILE MESSAGES - Under My Profile title ===== -->
+    <% if (success != null) { %>
+        <% if ("updated".equals(success)) { %>
+            <div class="message success">✓ Profile updated successfully!</div>
+        <% } else if ("healthUpdated".equals(success)) { %>
+            <div class="message success">✓ Health profile updated successfully!</div>
+        <% } %>
+    <% } %>
 
-    <form action="model/deleteProfile.jsp" method="post" onsubmit="return confirm('Are you sure you want to delete your account?');" class="delete-form">
-        <div class="button-row">
-            <input type="submit" value="Delete Profile" class="btn-delete">
+    <% if (errCode != null) { %>
+        <% if ("updateFail".equals(errCode)) { %>
+            <div class="message error">✗ Failed to update profile. Please try again.</div>
+        <% } else if ("deleteFail".equals(errCode)) { %>
+            <div class="message error">✗ Failed to delete account. Please try again.</div>
+        <% } else if ("healthUpdateFail".equals(errCode)) { %>
+            <div class="message error">✗ Failed to update health profile. Please try again.</div>
+        <% } %>
+    <% } %>
+    
+    <!-- ===== PROFILE FORM SECTION ===== -->
+    <div class="form-wrapper">
+        <form action="${pageContext.request.contextPath}/profile/update" method="post" class="profile-form">
+            <div class="form-row">
+                <label for="username">Username:</label>
+                <input type="text" name="username" id="username" value="<%= username %>" required>
+            </div>
+            <div class="form-row">
+                <label for="email">Email:</label>
+                <input type="email" name="email" id="email" value="<%= email %>" readonly>
+            </div>
+            <div class="form-row">
+                <label for="address">Address:</label>
+                <input type="text" name="address" id="address" value="<%= address %>" required>
+            </div>
+            <div class="form-row">
+                <label for="password">Password:</label>
+                <input type="password" name="password" id="password" placeholder="Leave blank to keep current">
+            </div>
+            <div class="button-row">
+                <input type="submit" value="Update Profile" class="btn-update">
+            </div>
+        </form>
+
+        <form action="${pageContext.request.contextPath}/profile/delete" method="post" 
+              onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');" 
+              class="delete-form">
+            <div class="button-row">
+                <input type="submit" value="Delete Profile" class="btn-delete">
+            </div>
+        </form>
+        
+        <!-- ===== HEALTH PROFILE BUTTON ===== -->
+        <div class="health-section">
+            <h3>Health & Emergency Information</h3>
+            <p class="health-description">Manage your health conditions, allergies, and emergency contacts</p>
+            <a href="${pageContext.request.contextPath}/profile/health" class="btn-outline">
+                Edit Health Profile
+            </a>
         </div>
-    </form>
-</div>
+    </div>
+
+    <h2>My Bookings</h2>
+    
+    <!-- ===== BOOKING MESSAGES - Under My Bookings title ===== -->
+    <% if (success != null) { %>
+        <% if ("paymentConfirmed".equals(success)) { %>
+            <div class="message success">✓ Payment confirmed! Your booking is now confirmed.</div>
+        <% } else if ("bookingCancelled".equals(success)) { %>
+            <div class="message success">✓ Booking cancelled successfully.</div>
+        <% } %>
+    <% } %>
+
+    <% if (errCode != null) { %>
+        <% if ("paymentFailed".equals(errCode)) { %>
+            <div class="message error">✗ Payment failed. Please try again.</div>
+        <% } else if ("cancelFailed".equals(errCode)) { %>
+            <div class="message error">✗ Failed to cancel booking. Please try again.</div>
+        <% } else if ("bookingNotFound".equals(errCode)) { %>
+            <div class="message error">✗ Booking not found.</div>
+        <% } else if ("unauthorized".equals(errCode)) { %>
+            <div class="message error">✗ You are not authorized to perform this action.</div>
+        <% } else if ("cannotCancel".equals(errCode)) { %>
+            <div class="message error">✗ This booking cannot be cancelled.</div>
+        <% } else if ("cannotCancelPaid".equals(errCode)) { %>
+            <div class="message error">✗ Cannot cancel a paid booking. Please contact customer service for refunds.</div>
+        <% } %>
+    <% } %>
 
 <%
-    // --- Update past bookings & retrieve active bookings ---
-    String sql = "WITH updated AS (" +
-                 "  UPDATE bookings SET status='completed' " +
-                 "  WHERE customer_id=? AND status='confirmed' AND end_date < CURRENT_DATE RETURNING *" +
-                 ") " +
-                 "SELECT b.booking_id, b.service_id, s.service_name, b.start_date, b.end_date, b.status, " +
+    // ===== UPDATE COMPLETED BOOKINGS =====
+    String updateCompletedSQL = "UPDATE bookings SET status='completed' WHERE customer_id=? AND status='confirmed' AND end_date < CURRENT_DATE";
+    PreparedStatement psUpdate = conn.prepareStatement(updateCompletedSQL);
+    psUpdate.setInt(1, customerId);
+    psUpdate.executeUpdate();
+    psUpdate.close();
+
+    // ===== GET ALL ACTIVE BOOKINGS =====
+    String sql = "SELECT b.booking_id, b.service_id, s.service_name, b.start_date, b.end_date, b.status, " +
                  "       CASE WHEN f.booking_id IS NOT NULL THEN TRUE ELSE FALSE END AS feedback_exists " +
                  "FROM bookings b " +
                  "JOIN services s ON b.service_id = s.service_id " +
@@ -87,22 +151,26 @@ try {
 
     PreparedStatement ps = conn.prepareStatement(sql);
     ps.setInt(1, customerId);
-    ps.setInt(2, customerId);
     ResultSet rs = ps.executeQuery();
+    
+    boolean hasBookings = false;
 %>
 
-<h2>My Bookings</h2>
-<table border="1">
-    <tr>
-        <th>Service</th>
-        <th>Start Date</th>
-        <th>End Date</th>
-        <th>Status</th>
-        <th>Action</th>
-    </tr>
+    <table class="bookings-table">
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
 
 <%
     while(rs.next()) {
+        hasBookings = true;
         int bookingId = rs.getInt("booking_id");
         int serviceId = rs.getInt("service_id");
         String serviceName = rs.getString("service_name");
@@ -110,54 +178,131 @@ try {
         LocalDate endDate = rs.getDate("end_date").toLocalDate();
         String status = rs.getString("status");
         boolean feedbackExists = rs.getBoolean("feedback_exists");
+        
+        String statusClass = "";
+        String statusText = status.toUpperCase();
+        
+        if ("pending".equalsIgnoreCase(status)) {
+            statusClass = "status-pending";
+        } else if ("confirmed".equalsIgnoreCase(status)) {
+            statusClass = "status-confirmed";
+        } else if ("completed".equalsIgnoreCase(status)) {
+            statusClass = "status-completed";
+        } else {
+            statusClass = "status-cancelled";
+            statusText = "CANCELLED";
+        }
 %>
-    <tr>
-        <td><%= serviceName %></td>
-        <td><%= startDate %></td>
-        <td><%= endDate %></td>
-        <td><%= status %></td>
-        <td>
-            <% if("pending".equalsIgnoreCase(status)) { %>
-                <form action="model/updateBookingStatus.jsp" method="post" style="display:inline;">
-                    <input type="hidden" name="bookingId" value="<%= bookingId %>">
-                    <input type="hidden" name="action" value="pay">
-                    <input type="submit" value="Pay" class="btn-pay">
-                </form>
-                <form action="model/updateBookingStatus.jsp" method="post" style="display:inline;">
-                    <input type="hidden" name="bookingId" value="<%= bookingId %>">
-                    <input type="hidden" name="action" value="cancel">
-                    <input type="submit" value="Cancel" class="btn-cancel">
-                </form>
-            <% } else if("confirmed".equalsIgnoreCase(status)) { %>
-                <form action="model/updateBookingStatus.jsp" method="post" style="display:inline;">
-                    <input type="hidden" name="bookingId" value="<%= bookingId %>">
-                    <input type="hidden" name="action" value="cancel">
-                    <input type="submit" value="Cancel" class="btn-cancel">
-                </form>
-            <% } else if("completed".equalsIgnoreCase(status)) { %>
-                <% if(feedbackExists) { %>
-                    <span>Feedback submitted</span>
-                <% } else { %>
-                    <form action="../feedback/feedback.jsp" method="post" style="display:inline;">
-                        <input type="hidden" name="bookingId" value="<%= bookingId %>">
-                        <input type="hidden" name="serviceId" value="<%= serviceId %>">
-                        <input type="submit" value="Leave Feedback" class="btn-feedback">
+        <tr>
+            <td><strong><%= serviceName %></strong></td>
+            <td><%= startDate %></td>
+            <td><%= endDate %></td>
+            <td><span class="status-badge <%= statusClass %>"><%= statusText %></span></td>
+            <td>
+                <% if("pending".equalsIgnoreCase(status)) { %>
+                    <%-- PAY NOW BUTTON - Goes directly to Stripe checkout --%>
+                    <button onclick="payWithStripe(<%= bookingId %>, <%= serviceId %>, '<%= startDate %>', '<%= endDate %>')" class="btn-pay">
+                        Pay Now
+                    </button>
+                    <form action="${pageContext.request.contextPath}/bookings/<%= bookingId %>/cancel" method="post" style="display:inline;">
+                        <input type="submit" value="Cancel" class="btn-cancel" onclick="return confirm('Are you sure you want to cancel this booking?');">
                     </form>
+                <% } else if("confirmed".equalsIgnoreCase(status)) { %>
+                    <span class="paid-badge">✓ Paid - Booking Confirmed</span>
+                <% } else if("completed".equalsIgnoreCase(status)) { %>
+                    <% if(feedbackExists) { %>
+                        <span class="feedback-submitted">✓ Feedback Submitted</span>
+                    <% } else { %>
+                        <form action="${pageContext.request.contextPath}/feedback" method="get" style="display:inline;">
+                            <input type="hidden" name="bookingId" value="<%= bookingId %>">
+                            <input type="hidden" name="serviceId" value="<%= serviceId %>">
+                            <input type="submit" value="Leave Feedback" class="btn-feedback">
+                        </form>
+                    <% } %>
                 <% } %>
-            <% } else { %>
-                <span>Feedback submitted</span>
-            <% } %>
-        </td>
-    </tr>
+            </td>
+        </tr>
 <%
-    } // end while
+    }
     rs.close();
     ps.close();
     conn.close();
+    
+    if (!hasBookings) {
+%>
+        <tr>
+            <td colspan="5" class="no-bookings">
+                <p>You have no bookings yet.</p>
+                <a href="${pageContext.request.contextPath}/serviceDetails" class="btn-outline">
+                    Browse Our Services
+                </a>
+            </td>
+        </tr>
+<%
+    }
+%>
+        </tbody>
+    </table>
+
+<%
 } catch(Exception e) {
-    out.println("<p>Database error: " + e.getMessage() + "</p>");
+    out.println("<div class='message error'>");
+    out.println("<strong>Database Error:</strong> " + e.getMessage());
+    out.println("</div>");
+    e.printStackTrace();
 }
 %>
-</table>
+
+</div>
+
+<!-- Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+const stripe = Stripe("pk_test_51SsDLV7JAQOUwt4TDGl0QVyxrTkZgF1BU7kxqf8VXrz2OQh03mQ2igl4l4cLa7jJXeoL0VcdPnfEBaD1BXzyrGvQ001gVHC5iT");
+
+async function payWithStripe(bookingId, serviceId, startDate, endDate) {
+    if (!confirm('Proceed to payment for this booking?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('${pageContext.request.contextPath}/stripe/create-checkout-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                bookingId: bookingId,
+                serviceId: serviceId,
+                startDate: startDate,
+                endDate: endDate
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to create checkout session');
+        }
+        
+        const data = await response.json();
+        
+        if (!data.id) {
+            throw new Error('No session ID returned');
+        }
+        
+        const result = await stripe.redirectToCheckout({
+            sessionId: data.id
+        });
+        
+        if (result.error) {
+            throw new Error(result.error.message);
+        }
+        
+    } catch (error) {
+        alert('Payment failed: ' + error.message);
+    }
+}
+</script>
 
 <%@ include file="../footer.jsp" %>
+</body>
+</html>

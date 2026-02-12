@@ -2,11 +2,13 @@ package controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class HomeController {
     
-    @GetMapping("/")
+    @GetMapping({"/", "/homepage"})
     public String home() {
         return "homepage";
     }
@@ -14,11 +16,6 @@ public class HomeController {
     @GetMapping("/login")
     public String login() {
         return "login";
-    }
-    
-    @GetMapping("/logout")
-    public String logout() {
-        return "logout";
     }
     
     @GetMapping("/register")
@@ -37,7 +34,7 @@ public class HomeController {
     }
     
     @GetMapping("/serviceHome")
-    public String serviceHome() {
+    public String serviceHome(@RequestParam Integer serviceId) {
         return "serviceHome";
     }
     
@@ -47,12 +44,12 @@ public class HomeController {
     }
     
     @GetMapping("/serviceMeal")
-    public String serviceMeal() {
+    public String serviceMeal(@RequestParam Integer serviceId) {
         return "serviceMeal";
     }
     
     @GetMapping("/serviceTransport")
-    public String serviceTransport() {
+    public String serviceTransport(@RequestParam Integer serviceId) {
         return "serviceTransport";
     }
     
@@ -61,7 +58,35 @@ public class HomeController {
         return "reviewAdmin";
     }
     
-    // Booking mappings
+    // ===== FEEDBACK PAGE MAPPINGS (Clean URLs) =====
+    
+    @GetMapping("/feedback")
+    public String feedback(@RequestParam Integer bookingId, @RequestParam Integer serviceId) {
+        return "feedback/feedback";
+    }
+    
+    @GetMapping("/feedback/update")
+    public String updateFeedbackPage(@RequestParam Integer feedbackId, @RequestParam Integer serviceId) {
+        return "feedback/updateFeedback";
+    }
+    
+    @PostMapping("/feedback/create")
+    public String createFeedbackQuery() {
+        return "feedback/createFeedbackQuery";
+    }
+    
+    @PostMapping("/feedback/update")
+    public String updateFeedbackQuery() {
+        return "feedback/updateFeedbackQuery";
+    }
+    
+    @GetMapping("/feedback/delete")
+    public String deleteFeedbackQuery() {
+        return "feedback/deleteFeedbackQuery";
+    }
+    
+    // ===== BOOKING ROUTES =====
+    
     @GetMapping("/booking/checkout")
     public String checkout() {
         return "booking/checkout";
@@ -72,16 +97,18 @@ public class HomeController {
         return "booking/payment";
     }
     
-    // Profile mappings
-    @GetMapping("/profile")
-    public String profile() {
-        return "profile/profile";
+    @GetMapping("/booking/createBooking")
+    public String createBooking(@RequestParam Integer serviceId, @RequestParam Integer packageId) {
+        return "booking/createBooking";
     }
     
-    // Feedback mappings
-    @GetMapping("/feedback")
-    public String feedback() {
-        return "feedback/feedback";
+    @GetMapping("/booking/viewCart")
+    public String viewCart() {
+        return "booking/viewCart";
     }
-
+    
+    @GetMapping("/booking/paymentSuccess")
+    public String paymentSuccess() {
+        return "booking/paymentSuccess";
+    }
 }

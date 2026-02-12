@@ -54,7 +54,7 @@
     <input type="password" name="password" minlength="6" required>
   </div>
   
-  <button type="button" onclick="window.location.href='login.jsp'">
+  <button type="button" onclick="window.location.href='login'">
     Already have an account?
   </button>
 
