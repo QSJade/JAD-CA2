@@ -28,7 +28,7 @@
         }
     %>
     
-<form action="registerUser" method="post" class="form-wrapper">
+<form action="${pageContext.request.contextPath}/registerUser" method="post">
   <div class="form-row">
     <label for="name">Username:</label>
     <input type="text" name="name" required>

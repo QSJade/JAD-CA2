@@ -17,7 +17,7 @@
     <groupId>com.example</groupId>
     <artifactId>JAD-assignment2</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
     <name>JAD-assignment2</name>
 
