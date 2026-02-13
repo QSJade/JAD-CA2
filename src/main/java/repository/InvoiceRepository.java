@@ -6,9 +6,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Integer> {
@@ -30,6 +30,9 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Integer> {
     @Query("SELECT i FROM Invoice i JOIN i.booking b WHERE b.service.serviceId = :serviceId")
     List<Invoice> findInvoicesByServiceId(@Param("serviceId") Integer serviceId);
     
+    @Query("SELECT i FROM Invoice i WHERE i.booking.bookingId = :bookingId")
+    Optional<Invoice> findByBookingId(@Param("bookingId") Integer bookingId);
+    
     @Query("SELECT SUM(i.totalAmount) FROM Invoice i WHERE i.paymentStatus = 'paid'")
     Double getTotalRevenue();
     
@@ -41,4 +44,11 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Integer> {
            "GROUP BY YEAR(i.invoiceDate), MONTH(i.invoiceDate) " +
            "ORDER BY YEAR(i.invoiceDate) DESC, MONTH(i.invoiceDate) DESC")
     List<Object[]> getMonthlyRevenue();
+    
+    @Query("SELECT s.serviceId, s.serviceName, COUNT(i), SUM(i.totalAmount) " +
+           "FROM Invoice i JOIN i.booking b JOIN b.service s " +
+           "WHERE i.paymentStatus = 'paid' " +
+           "GROUP BY s.serviceId, s.serviceName " +
+           "ORDER BY SUM(i.totalAmount) DESC")
+    List<Object[]> getServiceUsageReport();
 }

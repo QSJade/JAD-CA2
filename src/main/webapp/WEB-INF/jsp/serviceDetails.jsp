@@ -26,8 +26,7 @@
         String connURL = "jdbc:postgresql://ep-hidden-sound-a186ebzs-pooler.ap-southeast-1.aws.neon.tech/neondb?user=neondb_owner&password=npg_qlwo4uHmbj7F&sslmode=require&channelBinding=require";
         Connection conn = DriverManager.getConnection(connURL);
 
-        // Get all active services
-        String sql = "SELECT service_id, service_name, description FROM services WHERE is_active = TRUE ORDER BY service_id";
+        String sql = "SELECT service_id, service_name, description, image_url FROM services WHERE is_active = TRUE ORDER BY service_id";
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
 
@@ -35,18 +34,34 @@
             int serviceId = rs.getInt("service_id");
             String serviceName = rs.getString("service_name");
             String description = rs.getString("description");
+            String imageUrl = rs.getString("image_url");
+            
+            String imgSrc;
+            
+            // Priority 1: Uploaded image from database
+            if (imageUrl != null && !imageUrl.isEmpty()) {
+                imgSrc = request.getContextPath() + "/" + imageUrl;
+            } 
+            // Priority 2: Service-specific default images
+            else if(serviceName.equalsIgnoreCase("In-Home Care")) {
+            	imgSrc = request.getContextPath() + "/images/care.jpg";
+            } else if(serviceName.equalsIgnoreCase("Meal Support")) {
+            	imgSrc = request.getContextPath() + "/images/meal-service.jpg";
+            } else if(serviceName.equalsIgnoreCase("Transportation Assistance")) {
+            	imgSrc = request.getContextPath() + "/images/transportation.jpg";
+            } 
+            // Priority 3: Ultimate fallback
+            else {
+            	imgSrc = request.getContextPath() + "/images/elderly-care.jpg";
+            }
 
-            String imgSrc = "${pageContext.request.contextPath}/images/default-service.jpg";
+            // Controller path mapping
             String controllerPath = "#";
-
             if(serviceName.equalsIgnoreCase("In-Home Care")) {
-                imgSrc = "images/care.jpg";
                 controllerPath = "serviceHome";
             } else if(serviceName.equalsIgnoreCase("Meal Support")) {
-                imgSrc = "images/meal-service.jpg";
                 controllerPath = "serviceMeal";
             } else if(serviceName.equalsIgnoreCase("Transportation Assistance")) {
-                imgSrc = "images/transportation.jpg";
                 controllerPath = "serviceTransport";
             }
 %>

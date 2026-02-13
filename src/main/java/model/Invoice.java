@@ -41,7 +41,7 @@ public class Invoice {
     private Double totalAmount;
     
     @Column(nullable = false)
-    private String paymentStatus = "pending"; // pending, paid, overdue, refunded
+    private String paymentStatus = "pending"; 
     
     private LocalDateTime paymentDate;
     

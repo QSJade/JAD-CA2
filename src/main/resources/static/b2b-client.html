@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Silver 47 - Partner Service Directory</title>
+    <style>
+        body { font-family: Arial; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .service-card { 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin: 15px 0;
+            border-left: 5px solid #2c8a3e;
+        }
+        button { 
+            background: #2c8a3e; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 5px;
+        }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Silver 47 - Partner Integration Demo</h1>
+    <p>This page simulates a third-party healthcare provider consuming our B2B REST API.</p>
+    
+    <div>
+        <button onclick="fetchByCategory('HOME_CARE')">Home Care</button>
+        <button onclick="fetchByCategory('MEAL_SUPPORT')">Meal Support</button>
+        <button onclick="fetchByCategory('TRANSPORTATION')">Transportation</button>
+        <button onclick="fetchAll()">All Services</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api/b2b';
+        
+        async function fetchAll() {
+            const res = await fetch(`${API_BASE}/services`);
+            const data = await res.json();
+            displayResults(data);
+        }
+        
+        async function fetchByCategory(category) {
+            const res = await fetch(`${API_BASE}/services?category=${category}`);
+            const data = await res.json();
+            displayResults(data);
+        }
+        
+        function displayResults(data) {
+            let html = `<h2>Found ${data.count || 0} Services</h2>`;
+            data.data.forEach(service => {
+                html += `
+                    <div class="service-card">
+                        <h3>${service.serviceName}</h3>
+                        <p>${service.description || 'No description'}</p>
+                        <p><strong>Price:</strong> $${service.pricePerDay}/day</p>
+                        <p><strong>Category:</strong> ${service.category}</p>
+                        <p><strong>Service ID:</strong> ${service.serviceId}</p>
+                    </div>
+                `;
+            });
+            document.getElementById('results').innerHTML = html;
+        }
+        
+        // Load all on start
+        fetchAll();
+    </script>
+</body>
+</html>

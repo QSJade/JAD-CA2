@@ -24,17 +24,14 @@ public class AdminClientController {
     @Autowired
     private UserProfileService userProfileService;
     
-    // ===== CLIENT LISTING =====
     @GetMapping
     public String listAllClients(Model model, HttpSession session) {
-        // Check admin access
         String role = (String) session.getAttribute("sessUserRole");
         if (!"admin".equals(role)) {
             return "redirect:/login?errCode=unauthorized";
         }
         
         List<User> allUsers = userService.getAllUsers();
-        // Filter only customers (not admins)
         List<User> customers = new ArrayList<>();
         for (User user : allUsers) {
             if ("customer".equals(user.getRole())) {
@@ -46,7 +43,6 @@ public class AdminClientController {
         return "admin/clientList";
     }
     
-    // ===== CLIENT DETAILS =====
     @GetMapping("/{id}")
     public String viewClient(@PathVariable Integer id, Model model, HttpSession session) {
         String role = (String) session.getAttribute("sessUserRole");
@@ -63,7 +59,6 @@ public class AdminClientController {
         return "admin/clientDetail";
     }
     
-    // ===== EDIT CLIENT FORM =====
     @GetMapping("/{id}/edit")
     public String editClientForm(@PathVariable Integer id, Model model, HttpSession session) {
         String role = (String) session.getAttribute("sessUserRole");
@@ -80,7 +75,6 @@ public class AdminClientController {
         return "admin/clientEdit";
     }
     
-    // ===== UPDATE CLIENT =====
     @PostMapping("/{id}/update")
     public String updateClient(@PathVariable Integer id,
                               @ModelAttribute User user,
@@ -94,12 +88,10 @@ public class AdminClientController {
         }
         
         try {
-            // Update basic user info
             user.setCustomerId(id);
             user.setRole("customer");
             userService.updateUser(id, user);
             
-            // Update health profile
             profile.setCustomerId(id);
             userProfileService.createOrUpdateProfile(profile);
             
@@ -111,7 +103,6 @@ public class AdminClientController {
         return "redirect:/admin/clients/" + id;
     }
     
-    // ===== DELETE CLIENT =====
     @PostMapping("/{id}/delete")
     public String deleteClient(@PathVariable Integer id,
                               RedirectAttributes redirectAttributes,
@@ -131,8 +122,6 @@ public class AdminClientController {
         
         return "redirect:/admin/clients";
     }
-    
-    // ===== CLIENT INQUIRY & REPORTING =====
     
     @GetMapping("/search")
     public String searchClients(@RequestParam(required = false) String keyword,

@@ -128,7 +128,6 @@ public class UserProfileController {
             session.invalidate();
             return "redirect:/homepage";
         } catch (Exception e) {
-            redirectAttributes.addAttribute("errCode", "deleteFail");
             return "redirect:/profile";
         }
     }

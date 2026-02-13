@@ -44,7 +44,7 @@ try {
 
     <h1>My Profile</h1>
     
-    <!-- ===== PROFILE MESSAGES - Under My Profile title ===== -->
+    <!-- ===== PROFILE MESSAGES ===== -->
     <% if (success != null) { %>
         <% if ("updated".equals(success)) { %>
             <div class="message success">✓ Profile updated successfully!</div>
@@ -107,7 +107,7 @@ try {
 
     <h2>My Bookings</h2>
     
-    <!-- ===== BOOKING MESSAGES - Under My Bookings title ===== -->
+    <!-- ===== BOOKING MESSAGES ===== -->
     <% if (success != null) { %>
         <% if ("paymentConfirmed".equals(success)) { %>
             <div class="message success">✓ Payment confirmed! Your booking is now confirmed.</div>
@@ -133,12 +133,17 @@ try {
     <% } %>
 
 <%
-    // ===== UPDATE COMPLETED BOOKINGS =====
+    // ===== UPDATE COMPLETED BOOKINGS - Fix: Update confirmed bookings that have ended =====
     String updateCompletedSQL = "UPDATE bookings SET status='completed' WHERE customer_id=? AND status='confirmed' AND end_date < CURRENT_DATE";
     PreparedStatement psUpdate = conn.prepareStatement(updateCompletedSQL);
     psUpdate.setInt(1, customerId);
-    psUpdate.executeUpdate();
+    int updatedCount = psUpdate.executeUpdate();
     psUpdate.close();
+    
+    // Log if any bookings were updated (optional)
+    if (updatedCount > 0) {
+        System.out.println("Updated " + updatedCount + " bookings to completed for customer " + customerId);
+    }
 
     // ===== GET ALL ACTIVE BOOKINGS =====
     String sql = "SELECT b.booking_id, b.service_id, s.service_name, b.start_date, b.end_date, b.status, " +
@@ -154,6 +159,7 @@ try {
     ResultSet rs = ps.executeQuery();
     
     boolean hasBookings = false;
+    LocalDate today = LocalDate.now();
 %>
 
     <table class="bookings-table">
@@ -192,6 +198,9 @@ try {
             statusClass = "status-cancelled";
             statusText = "CANCELLED";
         }
+        
+        // Check if booking has ended (end date is before today)
+        boolean hasEnded = endDate.isBefore(today);
 %>
         <tr>
             <td><strong><%= serviceName %></strong></td>
@@ -200,16 +209,34 @@ try {
             <td><span class="status-badge <%= statusClass %>"><%= statusText %></span></td>
             <td>
                 <% if("pending".equalsIgnoreCase(status)) { %>
-                    <%-- PAY NOW BUTTON - Goes directly to Stripe checkout --%>
+                    <%-- PENDING - Not paid yet --%>
                     <button onclick="payWithStripe(<%= bookingId %>, <%= serviceId %>, '<%= startDate %>', '<%= endDate %>')" class="btn-pay">
                         Pay Now
                     </button>
                     <form action="${pageContext.request.contextPath}/bookings/<%= bookingId %>/cancel" method="post" style="display:inline;">
                         <input type="submit" value="Cancel" class="btn-cancel" onclick="return confirm('Are you sure you want to cancel this booking?');">
                     </form>
+                    
                 <% } else if("confirmed".equalsIgnoreCase(status)) { %>
-                    <span class="paid-badge">✓ Paid - Booking Confirmed</span>
+                    <%-- CONFIRMED - Paid but not yet completed --%>
+                    <% if(hasEnded) { %>
+                        <%-- Booking has ended - Can leave feedback --%>
+                        <% if(feedbackExists) { %>
+                            <span class="feedback-submitted">✓ Feedback Submitted</span>
+                        <% } else { %>
+                            <form action="${pageContext.request.contextPath}/feedback" method="get" style="display:inline;">
+                                <input type="hidden" name="bookingId" value="<%= bookingId %>">
+                                <input type="hidden" name="serviceId" value="<%= serviceId %>">
+                                <input type="submit" value="Leave Feedback" class="btn-feedback">
+                            </form>
+                        <% } %>
+                    <% } else { %>
+                        <%-- Booking still active --%>
+                        <span class="paid-badge">✓ Paid</span>
+                    <% } %>
+                    
                 <% } else if("completed".equalsIgnoreCase(status)) { %>
+                    <%-- COMPLETED - Booking is finished --%>
                     <% if(feedbackExists) { %>
                         <span class="feedback-submitted">✓ Feedback Submitted</span>
                     <% } else { %>

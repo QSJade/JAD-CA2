@@ -1,209 +1,228 @@
-<%@ page import="java.sql.*" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Services List</title>
-
+<title>Admin Dashboard</title>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 <style>
-/* --- GENERAL --- */
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f7f7f7;
-}
-
-/* --- SIDEBAR --- */
-.sidebar {
-    width: 160px;
-    background: #e7f5e8;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    padding: 25px 10px;
-}
-
-.sidebar h3 {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.sidebar a {
-    display: block;
-    padding: 8px;
-    background: white;
-    text-decoration: none;
-    color: black;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    text-align: center;
-}
-
-.sidebar a:hover {
-    background: #d9eadb;
-}
-
-/* --- MAIN CONTENT --- */
-.main {
-    margin-left: 200px;
-    padding: 20px;
-}
-
-.main h2 {
-    text-align: center;
-    margin-top: 10px;
-    margin-bottom: 40px;
-}
-
-/* --- SERVICE CARD CONTAINER --- */
-.service-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 40px;
-    margin-bottom: 40px;
-}
-
-/* --- SERVICE CARD --- */
-.card {
-    width: 280px;
-    background: white;
-    padding: 30px 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 8px rgba(0,0,0,0.08);
-    text-align: center;
-}
-
-.card img {
-    width: 60px;
-    height: 60px;
-    margin-bottom: 10px;
-}
-
-.card-title {
-    font-weight: bold;
-    margin: 5px 0;
-}
-
-.card-sub {
-    font-size: 12px;
-    color: gray;
-}
-
-/* --- BUTTONS --- */
-.btn {
-    padding: 10px 25px;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 15px;
-}
-
-.btn-delete {
-    background: #df3c3c;
-}
-
-.btn-edit {
-    background: #47a34b;
-}
-
-.btn-add {
-    background: #47a34b;
-    margin: 0 auto;
-    display: block;
-    margin-top: 20px;
-}
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .dashboard-header {
+        background: linear-gradient(135deg, #2c8a3e, #1f6a2f);
+        color: white;
+        padding: 40px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+    .dashboard-header h1 {
+        color: white;
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+    .dashboard-header p {
+        font-size: 18px;
+        opacity: 0.9;
+    }
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    .dashboard-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        padding: 25px;
+        transition: transform 0.3s;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(44, 138, 62, 0.15);
+    }
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #eaeaea;
+    }
+    .card-header h2 {
+        color: #2c8a3e;
+        margin: 0;
+        font-size: 22px;
+    }
+    .card-icon {
+        font-size: 40px;
+    }
+    .menu-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .menu-list li {
+        margin-bottom: 12px;
+    }
+    .menu-list a {
+        display: block;
+        padding: 12px 15px;
+        background: #f8f9fa;
+        color: #333;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.3s;
+        font-weight: 500;
+    }
+    .menu-list a:hover {
+        background: #2c8a3e;
+        color: white;
+        transform: translateX(5px);
+    }
+    .stats-row {
+        display: flex;
+        gap: 20px;
+        margin-top: 20px;
+    }
+    .stat-item {
+        flex: 1;
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 28px;
+        font-weight: bold;
+        color: #2c8a3e;
+    }
+    .stat-label {
+        font-size: 14px;
+        color: #666;
+        margin-top: 5px;
+    }
+    .welcome-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .logout-btn {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background 0.3s;
+    }
+    .logout-btn:hover {
+        background: rgba(255,255,255,0.3);
+    }
 </style>
-
-<link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
+<%@ include file="../header.jsp" %>
 
-<jsp:include page="<%= request.getContextPath() %>/header.jsp" />
+<%
+String userRole = (String) session.getAttribute("sessUserRole");
+String userName = (String) session.getAttribute("sessCustomerName");
+if (!"admin".equals(userRole)) {
+    response.sendRedirect(request.getContextPath() + "/login?errCode=unauthorized");
+    return;
+}
+%>
 
-<div class="sidebar">
-    <h3>Menu</h3>
-    <a href="adminService.jsp">Services</a>
-    <a href="reviewAdmin.jsp">Review</a>
-</div>
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="welcome-section">
+        <!-- ===== MESSAGE SECTION ===== -->
+<%
+String msg = request.getParameter("msg");
+String errCode = request.getParameter("errCode");
+%>
 
-
-<!-- MAIN CONTENT -->
-<div class="main">
-    <h2>Services list</h2>
-
-    <%
-        try {
-            Class.forName("org.postgresql.Driver");
-            String connURL = "jdbc:postgresql://ep-hidden-sound-a186ebzs-pooler.ap-southeast-1.aws.neon.tech/neondb?user=neondb_owner&password=npg_qlwo4uHmbj7F&sslmode=require&channelBinding=require";
-            Connection conn = DriverManager.getConnection(connURL);
-
-            String sql = "SELECT service_id, service_name, description FROM services WHERE is_active = TRUE ORDER BY service_id";
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-
-            while(rs.next()) {
-
-                int serviceId = rs.getInt("service_id");
-                String serviceName = rs.getString("service_name");
-                String description = rs.getString("description");
-
-                String imgSrc = "images/default-service.jpg";
-                String pageLink = "#";
-
-                if(serviceName.equalsIgnoreCase("In-Home Care")) {
-                    imgSrc = "images/care.jpg";
-                    pageLink = "serviceHome.jsp";
-                } else if(serviceName.equalsIgnoreCase("Meal Support")) {
-                    imgSrc = "images/meal-service.jpg";
-                    pageLink = "serviceMeal.jsp";
-                } else if(serviceName.equalsIgnoreCase("Transportation Assistance")) {
-                    imgSrc = "images/transportation.jpg";
-                    pageLink = "serviceTransport.jsp";
-                }
-    %>
-
-    <!-- DYNAMIC CARD -->
-    <div class="service-row">
-        <div class="card">
-            <img src="<%= imgSrc %>" alt="service icon">
-            <div class="card-title"><%= serviceName %></div>
-            <div class="card-sub"><%= description %></div>
-        </div>
-
-        <div>
-            <!-- DELETE -->
-            <form action="deleteService.jsp" method="post">
-                <input type="hidden" name="id" value="<%= serviceId %>">
-                <button class="btn btn-delete">Delete</button>
-            </form>
-
-            <br>
-
-            <!-- EDIT -->
-            <a href="editService.jsp?id=<%= serviceId %>">
-                <button class="btn btn-edit" type="button">Edit</button>
-            </a>
+<% if ("updated".equals(msg)) { %>
+    <div style="background: #d4edc9; color: #2c8a3e; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">✅</span>
+        <span style="font-weight: bold;">Service updated successfully!</span>
+    </div>
+<% } else if ("added".equals(msg)) { %>
+    <div style="background: #d4edc9; color: #2c8a3e; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">✅</span>
+        <span style="font-weight: bold;">Service added successfully!</span>
+    </div>
+<% } else if ("deleted".equals(msg)) { %>
+    <div style="background: #d4edc9; color: #2c8a3e; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">✅</span>
+        <span style="font-weight: bold;">Service deleted successfully!</span>
+    </div>
+<% } else if ("notFound".equals(errCode)) { %>
+    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">❌</span>
+        <span style="font-weight: bold;">Service not found!</span>
+    </div>
+<% } else if ("updateFailed".equals(errCode)) { %>
+    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">❌</span>
+        <span style="font-weight: bold;">Failed to update service. Please try again.</span>
+    </div>
+<% } else if ("error".equals(errCode)) { %>
+    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">❌</span>
+        <span style="font-weight: bold;">An error occurred. Please try again.</span>
+    </div>
+<% } %>
+            <div>
+                <h1>Admin Dashboard</h1>
+                <p>Welcome back, <%= userName != null ? userName : "Administrator" %>!</p>
+            </div>
         </div>
     </div>
-
-    <%
-            }
-            conn.close();
-        } catch (Exception e) {
-            out.println("Error: " + e.getMessage());
-        }
-    %>
-
-    <!-- ADD BUTTON -->
-    <a href="addService.jsp">
-        <button class="btn btn-add">Add</button>
-    </a>
-
+    
+    <div class="dashboard-grid">
+        <!-- ===== CLIENT MANAGEMENT CARD ===== -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2>Client Management</h2>
+                <span class="card-icon">👥</span>
+            </div>
+            <ul class="menu-list">
+                <li><a href="${pageContext.request.contextPath}/admin/clients">📋 View All Clients</a></li>
+                <li><a href="${pageContext.request.contextPath}/reviewAdmin">⭐ Manage Reviews</a></li>
+            </ul>
+        </div>
+        
+        <!-- ===== SALES MANAGEMENT CARD ===== -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2>Sales Management</h2>
+                <span class="card-icon">💰</span>
+            </div>
+            <ul class="menu-list">
+                <li><a href="${pageContext.request.contextPath}/admin/sales">📊 Sales Dashboard</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin/sales/invoices">📄 All Invoices</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin/sales/bookings">📅 Booking Inquiry</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin/sales/reports/top-clients">🏆 Top Clients</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin/sales/reports/service-usage">📈 Service Usage</a></li>
+            </ul>
+        </div>
+        
+        <!-- ===== SERVICE MANAGEMENT CARD ===== -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2>Service Management</h2>
+                <span class="card-icon">🛠️</span>
+            </div>
+            <ul class="menu-list">
+                <li><a href="${pageContext.request.contextPath}/admin/addService">➕ Add New Service</a></li>
+                <li><a href="${pageContext.request.contextPath}/admin/selectServiceToEdit">✏️ Edit Services</a></li>
+            </ul>
+        </div>
 </div>
 
+<%@ include file="../footer.jsp" %>
 </body>
 </html>

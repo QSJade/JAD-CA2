@@ -16,4 +16,13 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     
     List<Booking> findByStatusAndEndDateBefore(String status, LocalDate date);
     
+    // FOR ADMIN SALES
+    List<Booking> findByStartDateBetween(LocalDate startDate, LocalDate endDate);
+    
+    List<Booking> findByServiceServiceId(Integer serviceId);
+    
+    @Query("SELECT b FROM Booking b WHERE b.status = :status AND b.startDate BETWEEN :startDate AND :endDate")
+    List<Booking> findByStatusAndDateRange(@Param("status") String status, 
+                                           @Param("startDate") LocalDate startDate, 
+                                           @Param("endDate") LocalDate endDate);
 }

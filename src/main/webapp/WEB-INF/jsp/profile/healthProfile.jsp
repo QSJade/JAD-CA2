@@ -118,10 +118,14 @@ if ("healthUpdated".equals(success)) {
             <input type="text" name="emergencyContactName" value="<%= profile.getEmergencyContactName() != null ? profile.getEmergencyContactName() : "" %>">
         </div>
         
-        <div class="form-row">
-            <label>Contact Phone:</label>
-            <input type="text" name="emergencyContactPhone" value="<%= profile.getEmergencyContactPhone() != null ? profile.getEmergencyContactPhone() : "" %>">
-        </div>
+<div class="form-row">
+    <label>Contact Phone:</label>
+    <input type="text" 
+           id="emergencyContactPhone"
+           name="emergencyContactPhone" 
+           value="<%= profile.getEmergencyContactPhone() != null ? profile.getEmergencyContactPhone() : "" %>"
+           maxlength="10">
+</div>
         
         <div class="form-row">
             <label>Relationship:</label>

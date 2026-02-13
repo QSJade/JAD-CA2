@@ -21,7 +21,6 @@ public class BookingService {
      */
     public List<Booking> getBookingsByCustomerId(Integer customerId) {
         List<Booking> bookings = bookingRepository.findByUserCustomerId(customerId);
-        // Don't set feedbackExists here - let JSP handle it
         return bookings;
     }
 
@@ -30,7 +29,13 @@ public class BookingService {
     }
 
     public Booking getBookingById(Integer id) {
-        return bookingRepository.findById(id).orElse(null);
+        Booking booking = bookingRepository.findById(id).orElse(null);
+        if (booking != null) {
+            if (booking.getSubtotal() == null) booking.setSubtotal(0.0);
+            if (booking.getGst() == null) booking.setGst(0.0);
+            if (booking.getTotalAmount() == null) booking.setTotalAmount(0.0);
+        }
+        return booking;
     }
 
     @Transactional
@@ -68,7 +73,6 @@ public class BookingService {
     public boolean cancelBooking(Integer bookingId, Integer customerId) {
         Booking booking = bookingRepository.findById(bookingId).orElse(null);
         if (booking != null && booking.getUser().getCustomerId().equals(customerId)) {
-            // ONLY allow cancellation of PENDING bookings (not paid)
             if ("pending".equalsIgnoreCase(booking.getStatus())) {
                 booking.setStatus("cancelled");
                 bookingRepository.save(booking);
@@ -77,13 +81,16 @@ public class BookingService {
         }
         return false;
     }
+    
     @Transactional
     public boolean confirmBooking(Integer bookingId, Integer customerId) {
         Booking booking = bookingRepository.findById(bookingId).orElse(null);
         if (booking != null && booking.getUser().getCustomerId().equals(customerId)) {
-            booking.setStatus("confirmed");
-            bookingRepository.save(booking);
-            return true;
+            if ("pending".equalsIgnoreCase(booking.getStatus())) {
+                booking.setStatus("confirmed");
+                bookingRepository.save(booking);
+                return true;
+            }
         }
         return false;
     }
@@ -98,8 +105,11 @@ public class BookingService {
     
     @Transactional
     public void updateCompletedBookings() {
-        List<Booking> confirmedBookings = bookingRepository.findByStatusAndEndDateBefore("confirmed", LocalDate.now());
-        for (Booking booking : confirmedBookings) {
+        // Update confirmed bookings that have ended to 'completed' status
+        String sql = "UPDATE bookings SET status='completed' WHERE status='confirmed' AND end_date < CURRENT_DATE";
+        // Use entity manager or repository to execute native query
+        List<Booking> endedBookings = bookingRepository.findByStatusAndEndDateBefore("confirmed", LocalDate.now());
+        for (Booking booking : endedBookings) {
             booking.setStatus("completed");
             bookingRepository.save(booking);
         }
@@ -111,5 +121,15 @@ public class BookingService {
             return true;
         }
         return false;
+    }
+    
+    // ===== ADDED METHODS FOR ADMIN SALES =====
+    
+    public List<Booking> getBookingsByDateRange(LocalDate startDate, LocalDate endDate) {
+        return bookingRepository.findByStartDateBetween(startDate, endDate);
+    }
+    
+    public List<Booking> getBookingsByServiceId(Integer serviceId) {
+        return bookingRepository.findByServiceServiceId(serviceId);
     }
 }

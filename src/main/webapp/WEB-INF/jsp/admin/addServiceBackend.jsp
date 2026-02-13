@@ -11,27 +11,25 @@ if (!"admin".equals(userRole)) {
 }
 
 // Get form parameters
-String id = request.getParameter("id");
 String serviceName = request.getParameter("serviceName");
 String serviceDetails = request.getParameter("serviceDetails");
 String price = request.getParameter("price");
-String removeImage = request.getParameter("removeImage");
 
 // Validate required fields
-if (id == null || id.isEmpty() || serviceName == null || serviceDetails == null || price == null ||
+if (serviceName == null || serviceDetails == null || price == null ||
     serviceName.isEmpty() || serviceDetails.isEmpty() || price.isEmpty()) {
-    response.sendRedirect(request.getContextPath() + "/admin/editService?id=" + id + "&errCode=missingFields");
+    response.sendRedirect(request.getContextPath() + "/admin/addService?errCode=missingFields");
     return;
 }
 
 // Handle file upload
 String imageUrl = null;
 Part filePart = request.getPart("serviceImage");
-boolean hasNewImage = filePart != null && filePart.getSize() > 0;
 
-if (hasNewImage) {
+if (filePart != null && filePart.getSize() > 0) {
     String contentType = filePart.getContentType();
     if (contentType.startsWith("image/")) {
+        // Get original filename
         String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
         
         // Get file extension
@@ -40,92 +38,68 @@ if (hasNewImage) {
         if (lastDot > 0) {
             extension = fileName.substring(lastDot + 1);
         } else {
-            extension = "jpg";
+            extension = "jpg"; // default extension
         }
         
+        // Generate unique filename
         String uniqueFileName = "service_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + "." + extension;
         
+        // Set upload path - creates folder in your webapp
         String uploadPath = application.getRealPath("/") + "uploads/services/";
         File uploadDir = new File(uploadPath);
         if (!uploadDir.exists()) {
             uploadDir.mkdirs();
         }
         
+        // Save file
         String filePath = uploadPath + uniqueFileName;
         filePart.write(filePath);
+        
+        // Set image URL for database (relative path)
         imageUrl = "uploads/services/" + uniqueFileName;
     }
 }
 
-// Update database
+// Insert into database
 try {
     Class.forName("org.postgresql.Driver");
     String connURL = "jdbc:postgresql://ep-hidden-sound-a186ebzs-pooler.ap-southeast-1.aws.neon.tech/neondb?user=neondb_owner&password=npg_qlwo4uHmbj7F&sslmode=require&channelBinding=require";
     Connection conn = DriverManager.getConnection(connURL);
     
-    // Get old image URL to delete later
-    String oldImageUrl = null;
-    if (hasNewImage || "yes".equals(removeImage)) {
-        String selectSql = "SELECT image_url FROM services WHERE service_id = ?";
-        PreparedStatement selectPs = conn.prepareStatement(selectSql);
-        selectPs.setInt(1, Integer.parseInt(id));
-        ResultSet rs = selectPs.executeQuery();
-        if (rs.next()) {
-            oldImageUrl = rs.getString("image_url");
-        }
-        rs.close();
-        selectPs.close();
-    }
-    
     String sql;
     PreparedStatement ps;
     
-    if (hasNewImage) {
-        sql = "UPDATE services SET service_name = ?, description = ?, price_per_day = ?, image_url = ? WHERE service_id = ?";
+    if (imageUrl != null) {
+        // Insert with image
+        sql = "INSERT INTO services (service_name, description, price_per_day, image_url, is_active, created_at) VALUES (?, ?, ?, ?, TRUE, NOW())";
         ps = conn.prepareStatement(sql);
         ps.setString(1, serviceName);
         ps.setString(2, serviceDetails);
         ps.setBigDecimal(3, new java.math.BigDecimal(price));
         ps.setString(4, imageUrl);
-        ps.setInt(5, Integer.parseInt(id));
-    } else if ("yes".equals(removeImage)) {
-        sql = "UPDATE services SET service_name = ?, description = ?, price_per_day = ?, image_url = NULL WHERE service_id = ?";
-        ps = conn.prepareStatement(sql);
-        ps.setString(1, serviceName);
-        ps.setString(2, serviceDetails);
-        ps.setBigDecimal(3, new java.math.BigDecimal(price));
-        ps.setInt(4, Integer.parseInt(id));
     } else {
-        sql = "UPDATE services SET service_name = ?, description = ?, price_per_day = ? WHERE service_id = ?";
+        // Insert without image
+        sql = "INSERT INTO services (service_name, description, price_per_day, is_active, created_at) VALUES (?, ?, ?, TRUE, NOW())";
         ps = conn.prepareStatement(sql);
         ps.setString(1, serviceName);
         ps.setString(2, serviceDetails);
         ps.setBigDecimal(3, new java.math.BigDecimal(price));
-        ps.setInt(4, Integer.parseInt(id));
     }
     
     int rows = ps.executeUpdate();
     ps.close();
-    
-    // Delete old image file if replaced or removed
-    if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
-        String oldFilePath = application.getRealPath("/") + oldImageUrl;
-        File oldFile = new File(oldFilePath);
-        if (oldFile.exists()) {
-            oldFile.delete();
-        }
-    }
-    
     conn.close();
     
     if (rows > 0) {
-        response.sendRedirect(request.getContextPath() + "/adminService?msg=updated");
+        // Success - redirect to admin service page with success message
+        response.sendRedirect(request.getContextPath() + "/adminService?msg=added");
     } else {
-        response.sendRedirect(request.getContextPath() + "/admin/editService?id=" + id + "&errCode=updateFailed");
+        // Failed - redirect back to add form with error
+        response.sendRedirect(request.getContextPath() + "/admin/addService?errCode=insertFailed");
     }
     
 } catch (Exception e) {
     e.printStackTrace();
-    response.sendRedirect(request.getContextPath() + "/admin/editService?id=" + id + "&errCode=error");
+    response.sendRedirect(request.getContextPath() + "/admin/addService?errCode=error");
 }
 %>

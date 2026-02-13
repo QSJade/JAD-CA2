@@ -1,4 +1,4 @@
-package controller.admin;
+package controller;
 
 import model.Invoice;
 import model.Booking;
@@ -12,10 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpSession;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin/sales")
@@ -30,7 +29,6 @@ public class AdminSalesController {
     @Autowired
     private CareServiceService careServiceService;
     
-    // ===== DASHBOARD =====
     @GetMapping
     public String salesDashboard(Model model, HttpSession session) {
         String role = (String) session.getAttribute("sessUserRole");
@@ -38,7 +36,6 @@ public class AdminSalesController {
             return "redirect:/login?errCode=unauthorized";
         }
         
-        // Summary statistics
         model.addAttribute("totalRevenue", invoiceService.getTotalRevenue());
         model.addAttribute("totalInvoices", invoiceService.getAllInvoices().size());
         model.addAttribute("paidInvoices", invoiceService.getTotalPaidInvoices());
@@ -48,7 +45,6 @@ public class AdminSalesController {
         return "admin/salesDashboard";
     }
     
-    // ===== INVOICE LISTING =====
     @GetMapping("/invoices")
     public String listInvoices(Model model, HttpSession session) {
         String role = (String) session.getAttribute("sessUserRole");
@@ -57,6 +53,20 @@ public class AdminSalesController {
         }
         
         List<Invoice> invoices = invoiceService.getAllInvoices();
+        
+        // DEBUG
+        System.out.println("===== INVOICE LIST =====");
+        System.out.println("Number of invoices found: " + (invoices != null ? invoices.size() : 0));
+        if (invoices != null && !invoices.isEmpty()) {
+            for (Invoice inv : invoices) {
+                System.out.println("Invoice ID: " + inv.getInvoiceId() + 
+                                 ", Number: " + inv.getInvoiceNumber() + 
+                                 ", Amount: " + inv.getTotalAmount());
+            }
+        } else {
+            System.out.println("NO INVOICES FOUND IN DATABASE!");
+        }
+        
         model.addAttribute("invoices", invoices);
         
         return "admin/invoiceList";
@@ -69,17 +79,18 @@ public class AdminSalesController {
             return "redirect:/login?errCode=unauthorized";
         }
         
-        Invoice invoice = invoiceService.getInvoiceById(id);
+        // FIX: Use the new method that initializes lazy collections
+        Invoice invoice = invoiceService.getInvoiceByIdWithItems(id);
         model.addAttribute("invoice", invoice);
         
         return "admin/invoiceDetail";
     }
     
-    // ===== BOOKINGS INQUIRY =====
     @GetMapping("/bookings")
     public String listBookings(@RequestParam(required = false) String startDate,
                               @RequestParam(required = false) String endDate,
                               @RequestParam(required = false) Integer serviceId,
+                              @RequestParam(required = false) Integer customerId,
                               Model model, HttpSession session) {
         
         String role = (String) session.getAttribute("sessUserRole");
@@ -89,30 +100,41 @@ public class AdminSalesController {
         
         List<Booking> bookings;
         
-        if (startDate != null && endDate != null) {
-            // Filter by date range
+        if (startDate != null && endDate != null && !startDate.isEmpty() && !endDate.isEmpty()) {
             LocalDate start = LocalDate.parse(startDate);
             LocalDate end = LocalDate.parse(endDate);
             bookings = bookingService.getBookingsByDateRange(start, end);
             model.addAttribute("startDate", startDate);
             model.addAttribute("endDate", endDate);
         } else if (serviceId != null) {
-            // Filter by service
             bookings = bookingService.getBookingsByServiceId(serviceId);
             model.addAttribute("serviceId", serviceId);
             model.addAttribute("serviceName", careServiceService.getServiceById(serviceId).getServiceName());
+        } else if (customerId != null) {
+            bookings = bookingService.getBookingsByCustomerId(customerId);
+            model.addAttribute("customerId", customerId);
         } else {
-            // All bookings
             bookings = bookingService.getAllBookings();
         }
         
+        // Get invoice IDs for each booking
+        Map<Integer, Integer> bookingInvoiceMap = new HashMap<>();
+        if (bookings != null) {
+            for (Booking booking : bookings) {
+                Invoice invoice = invoiceService.getInvoiceByBookingId(booking.getBookingId());
+                if (invoice != null) {
+                    bookingInvoiceMap.put(booking.getBookingId(), invoice.getInvoiceId());
+                }
+            }
+        }
+        
         model.addAttribute("bookings", bookings);
-        model.addAttribute("services", careServiceService.getAllActiveServices());
+        model.addAttribute("bookingInvoiceMap", bookingInvoiceMap);
+        model.addAttribute("services", careServiceService.getAllServices());
         
         return "admin/bookingInquiry";
     }
     
-    // ===== TOP CLIENTS REPORT =====
     @GetMapping("/reports/top-clients")
     public String topClientsReport(Model model, HttpSession session) {
         String role = (String) session.getAttribute("sessUserRole");
@@ -126,7 +148,6 @@ public class AdminSalesController {
         return "admin/topClientsReport";
     }
     
-    // ===== SERVICE USAGE REPORT =====
     @GetMapping("/reports/service-usage")
     public String serviceUsageReport(@RequestParam(required = false) Integer serviceId,
                                     Model model, HttpSession session) {
@@ -137,12 +158,16 @@ public class AdminSalesController {
         }
         
         if (serviceId != null) {
-            List<Invoice> invoices = invoiceService.getInvoicesByService(serviceId);
+            List<Invoice> invoices = invoiceService.getInvoicesByServiceId(serviceId);
             model.addAttribute("invoices", invoices);
             model.addAttribute("selectedService", careServiceService.getServiceById(serviceId));
+            double totalAmount = invoices.stream()
+                .mapToDouble(Invoice::getTotalAmount)
+                .sum();
+            model.addAttribute("totalAmount", totalAmount);
         }
         
-        model.addAttribute("services", careServiceService.getAllActiveServices());
+        model.addAttribute("services", careServiceService.getAllServices());
         
         return "admin/serviceUsageReport";
     }

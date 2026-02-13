@@ -1,171 +1,163 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Admin Review Board</title>
-
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 <style>
-/* --- GENERAL --- */
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f7f7f7;
-}
-
-/* --- SIDEBAR --- */
-.sidebar {
-    width: 160px;
-    background: #e7f5e8;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    padding: 25px 10px;
-}
-
-.sidebar h3 {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.sidebar a {
-    display: block;
-    padding: 8px;
-    background: white;
-    text-decoration: none;
-    color: black;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    text-align: center;
-}
-
-.sidebar a:hover {
-    background: #d9eadb;
-}
-
-/* --- MAIN CONTENT --- */
-.main {
-    margin-left: 200px;
-    padding: 20px;
-}
-
-.main h2 {
-    text-align: center;
-    margin-top: 10px;
-    margin-bottom: 40px;
-}
-
-/* --- REVIEW CARD --- */
-.review-card {
-    width: 90%;
-    background: white;
-    padding: 20px 25px;
-    border-radius: 10px;
-    margin: 0 auto 20px auto;
-    box-shadow: 0 0 8px rgba(0,0,0,0.08);
-}
-
-.review-header {
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-}
-
-.review-sub {
-    font-size: 13px;
-    color: gray;
-}
-
-.rating {
-    font-size: 18px;
-    font-weight: bold;
-    color: #47a34b;
-}
+    .review-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    .review-card {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .review-header-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eaeaea;
+    }
+    .customer-name {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2c8a3e;
+    }
+    .service-name {
+        font-size: 14px;
+        color: #666;
+        margin-left: 10px;
+    }
+    .rating {
+        font-size: 18px;
+        font-weight: bold;
+        color: #f39c12;
+    }
+    .comments {
+        font-size: 16px;
+        line-height: 1.6;
+        margin-bottom: 15px;
+    }
+    .submitted-date {
+        font-size: 12px;
+        color: #999;
+    }
+    .btn-delete {
+        background: #e74c3c;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    .btn-delete:hover {
+        background: #c0392b;
+    }
 </style>
-
-<link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
+<%@ include file="../header.jsp" %>
 
-<jsp:include page="<%= request.getContextPath() %>/header.jsp" />
+<%
+String userRole = (String) session.getAttribute("sessUserRole");
+if (!"admin".equals(userRole)) {
+    response.sendRedirect(request.getContextPath() + "/login?errCode=unauthorized");
+    return;
+}
+%>
 
-<div class="sidebar">
-    <h3>Menu</h3>
-    <a href="adminService.jsp">Services</a>
-    <a href="reviewAdmin.jsp">Review</a>
-</div>
-
-
-<!-- MAIN CONTENT -->
-<div class="main">
-    <h2>Customer Reviews</h2>
+<div class="review-container">
+    <div class="review-header">
+        <h1>Customer Reviews</h1>
+        <a href="${pageContext.request.contextPath}/adminService" class="btn-outline">← Back to Dashboard</a>
+    </div>
 
     <%
-        try {
-            Class.forName("org.postgresql.Driver");
-            String connURL = "jdbc:postgresql://ep-hidden-sound-a186ebzs-pooler.ap-southeast-1.aws.neon.tech/neondb?user=neondb_owner&password=npg_qlwo4uHmbj7F&sslmode=require&channelBinding=require";
-            Connection conn = DriverManager.getConnection(connURL);
+    try {
+        Class.forName("org.postgresql.Driver");
+        String connURL = "jdbc:postgresql://ep-hidden-sound-a186ebzs-pooler.ap-southeast-1.aws.neon.tech/neondb?user=neondb_owner&password=npg_qlwo4uHmbj7F&sslmode=require&channelBinding=require";
+        Connection conn = DriverManager.getConnection(connURL);
 
-            // JOIN feedback + customers + services
-            String sql =
-            "SELECT f.feedback_id, f.rating, f.comments, f.created_at, " +
-            "c.name AS customer_name, s.service_name " +
-            "FROM feedbacks f " +
-            "JOIN customers c ON f.customer_id = c.customer_id " +
-            "JOIN services s ON f.service_id = s.service_id " +
-            "ORDER BY f.created_at DESC";
+        String sql = "SELECT f.feedback_id, f.rating, f.comments, f.created_at, " +
+                     "c.name AS customer_name, s.service_name " +
+                     "FROM feedbacks f " +
+                     "JOIN customers c ON f.customer_id = c.customer_id " +
+                     "JOIN services s ON f.service_id = s.service_id " +
+                     "ORDER BY f.created_at DESC";
 
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+        
+        boolean hasReviews = false;
 
-            while(rs.next()) {
-                int id = rs.getInt("feedback_id");
-                int rating = rs.getInt("rating");
-                String comments = rs.getString("comments");
-                String customer = rs.getString("customer_name");
-                String service = rs.getString("service_name");
-                Timestamp created = rs.getTimestamp("created_at");
+        while(rs.next()) {
+            hasReviews = true;
+            int id = rs.getInt("feedback_id");
+            int rating = rs.getInt("rating");
+            String comments = rs.getString("comments");
+            String customer = rs.getString("customer_name");
+            String service = rs.getString("service_name");
+            Timestamp created = rs.getTimestamp("created_at");
     %>
+    
+    <div class="review-card">
+        <div class="review-header-info">
+            <div>
+                <span class="customer-name"><%= customer %></span>
+                <span class="service-name"><%= service %></span>
+            </div>
+            <div class="rating">
+                <% for(int i = 1; i <= 5; i++) { %>
+                    <%= i <= rating ? "★" : "☆" %>
+                <% } %>
+                (<%= rating %>/5)
+            </div>
+        </div>
+        <div class="comments">"<%= comments %>"</div>
+        <div class="submitted-date">Submitted: <%= created %></div>
+        <form action="${pageContext.request.contextPath}/admin/deleteReview" method="post" 
+              onsubmit="return confirm('Are you sure you want to delete this review?');">
+            <input type="hidden" name="id" value="<%= id %>">
+            <button type="submit" class="btn-delete">Delete Review</button>
+        </form>
+    </div>
 
-
-			    <<!-- REVIEW CARD -->
-			<div class="review-card">
-			    <div class="review-header">
-			        <div><%= customer %> <span class="review-sub"><%= service %></span></div>
-			        <div class="rating"> Review: <%= rating %>/5</div>
-			    </div>
-			
-			    <p style="margin-top:10px;"><%= comments %></p>
-			
-			    <div class="review-sub">
-			        Submitted: <%= created %>
-			    </div>
-			
-			    <!-- DELETE BUTTON -->
-			    <form action="deleteFeedback.jsp" method="post" style="margin-top:10px;">
-			        <input type="hidden" name="id" value="<%= id %>">
-			        <button 
-			            type="submit" 
-			            style="background:#df3c3c; padding:8px 15px; border:none; border-radius:5px; color:white; cursor:pointer;">
-			            Delete
-			        </button>
-			    </form>
-			</div>
-
-
-    <% 
-            }
-            conn.close();
-        } catch (Exception e) {
-            out.println("Error: " + e.getMessage());
+    <%
         }
+        if (!hasReviews) {
     %>
-
+        <div style="text-align: center; padding: 60px; background: white; border-radius: 10px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">⭐</div>
+            <h3 style="color: #666; margin-bottom: 10px;">No Reviews Yet</h3>
+            <p style="color: #999;">Customer reviews will appear here once submitted.</p>
+        </div>
+    <%
+        }
+        rs.close();
+        stmt.close();
+        conn.close();
+    } catch (Exception e) {
+        out.println("<div style='color: red; padding: 20px;'>Error: " + e.getMessage() + "</div>");
+    }
+    %>
 </div>
 
-<jsp:include page="<%= request.getContextPath() %>/footer.jsp" />
-
+<%@ include file="../footer.jsp" %>
 </body>
 </html>
