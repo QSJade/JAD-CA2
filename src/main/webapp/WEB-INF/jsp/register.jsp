@@ -28,7 +28,7 @@
         }
     %>
     
-<form action="registerUser.jsp" method="post" class="form-wrapper">
+<form action="registerUser" method="post" class="form-wrapper">
   <div class="form-row">
     <label for="name">Username:</label>
     <input type="text" name="name" required>

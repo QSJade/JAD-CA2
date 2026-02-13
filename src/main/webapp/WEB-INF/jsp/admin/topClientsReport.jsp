@@ -68,6 +68,44 @@
     .btn-print:hover {
         background: #2980b9;
     }
+    /* Print styles - hide navbar, footer, buttons when printing */
+@media print {
+    /* Hide header, footer, and navigation */
+    header, footer, nav, .navbar, .header, .button-group, 
+    .btn-outline, .btn-update, .btn-print, .logout-btn,
+    a[href], .action-buttons, .sidebar, .dashboard-header {
+        display: none !important;
+    }
+    
+    /* Show only the invoice card */
+    .invoice-card {
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+    }
+    
+    /* Ensure invoice takes full page */
+    .invoice-container {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+    
+    /* Ensure table borders print */
+    .items-table th, .items-table td {
+        border: 1px solid #000 !important;
+    }
+    
+    /* Hide print button itself when printing */
+    .btn-print, button[onclick*="print"] {
+        display: none !important;
+    }
+    
+    /* Add invoice title for print */
+    .invoice-header h1 {
+        color: black !important;
+    }
 </style>
 </head>
 <body>
@@ -139,7 +177,6 @@ if (topClients != null) {
                 <th style="width: 80px;">Rank</th>
                 <th>Client ID</th>
                 <th>Client Name</th>
-                <th>Email</th>
                 <th>Total Spent</th>
                 <th>% of Total</th>
                 <th>Action</th>
